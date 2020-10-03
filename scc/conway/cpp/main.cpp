@@ -64,12 +64,11 @@ bool updateState(vector<vector<char>> &currentState, vector<string> &history) {
   vector<vector<char>> span;
   initMap(span, currentState.size() + 2, currentState.at(0).size() + 2, 0);
   for (size_t i = 0; i < currentState.size(); i++)
-    for (size_t j = 0; j < currentState.at(0).size(); j++) {
+    for (size_t j = 0; j < currentState.at(0).size(); j++)
       span.at(i + 1).at(j + 1) = char(currentState.at(i).at(j) == 'O');
-    }
 
   // The four rules
-  for (size_t i = 0; i < nextState.size(); i++) {
+  for (size_t i = 0; i < nextState.size(); i++)
     for (size_t j = 0; j < nextState.at(0).size(); j++) {
       int aliveNum = span[i][j] + span[i][j + 1] + span[i][j + 2] +
                      span[i + 1][j] + span[i + 1][j + 2] + span[i + 2][j] +
@@ -79,7 +78,6 @@ bool updateState(vector<vector<char>> &currentState, vector<string> &history) {
       else
         nextState[i][j] = (aliveNum == 3) ? 'O' : '.';
     }
-  }
 
   // Update current state from the buffer state
   currentState = nextState;
