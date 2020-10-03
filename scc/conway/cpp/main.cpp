@@ -38,8 +38,8 @@ vector<size_t> get_rand(pair<size_t, size_t> range, int num = 1) {
 
 void setCell(vector<vector<char>> &conayMap, vector<size_t> cells) {
   for (auto i : cells) {
-    auto column = i / conayMap.size();
-    auto row = i - column * conayMap.size();
+    auto column = i % conayMap.size();
+    auto row = i / conayMap.size();
     conayMap.at(column).at(row) = 'O';
   }
 }
@@ -62,7 +62,7 @@ bool updateState(vector<vector<char>> &currentState, vector<string> &history) {
 
   // span the map
   vector<vector<char>> span;
-  initMap(span, currentState.size() + 2, currentState.at(0).size() + 2, 0);
+  initMap(span, currentState.at(0).size() + 2, currentState.size() + 2, 0);
   for (size_t i = 0; i < currentState.size(); i++)
     for (size_t j = 0; j < currentState.at(0).size(); j++)
       span.at(i + 1).at(j + 1) = char(currentState.at(i).at(j) == 'O');
