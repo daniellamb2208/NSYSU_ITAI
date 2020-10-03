@@ -26,7 +26,7 @@ void printMap(vector<vector<char>> conwayMap) {
 vector<size_t> get_rand(pair<size_t, size_t> range, int num = 1) {
   random_device rd;
   mt19937_64 gen = mt19937_64(rd());
-  uniform_int_distribution<> distribution(0, range.first * range.second);
+  uniform_int_distribution<> distribution(0, range.first * range.second - 1);
   auto rand = bind(distribution, gen);
 
   vector<size_t> result;
@@ -97,6 +97,7 @@ int main() {
 
   setCell(conwayMap, cells);
   do {
+	cout << "\033[2J\033[H";
     printMap(conwayMap);
     usleep(100000);
   } while (updateState(conwayMap, history));
