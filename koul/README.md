@@ -1,4 +1,4 @@
-# This is Introduction to Artificial Intellegence in NSYSU homework 1
+# HW 1 of Introduction to Artificial Intelligence in NSYSU
 
 We implemented Conway's game of life by Python
 
