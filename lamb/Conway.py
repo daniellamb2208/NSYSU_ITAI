@@ -6,7 +6,7 @@ from sys import exit
 class Conway:
     alive=1
     dead=0
-    def __init__(self,wid=800,hei=600,sz=10,a_c=(255,255,255),d_c=(0,0,0)):
+    def __init__(self,wid=500,hei=500,sz=10,a_c=(255,255,255),d_c=(0,0,0)):
               
         self.window_wid = int(wid)
         self.window_hei = int(hei)
@@ -50,11 +50,9 @@ class Conway:
         return (self.using_lattice+1)%2
     
     def cell_value(self,r,c):
-        try:
-            value = self.lattice[self.using_lattice][r][c]
-        except:
-            value = Conway.dead
-        return value
+        if r<0 or c<0 or r>=self.rows or c>=self.columns:
+            return Conway.dead
+        return self.lattice[self.using_lattice][r][c]
     
     def how_many_nearby(self,r,c):
         nei = 0
