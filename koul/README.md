@@ -16,28 +16,30 @@ python3 Conway.py
 
 ## Usage
 
-`pygame`
+Dependent package: `pygame`
 
 [Installation tutorial](https://stackoverflow.com/questions/51793198/pip3-install-pygame-not-working)
 
-Firstly, make sure you already have pip tool
+Firstly, please make sure you already have installed the pip tool
+> Try 
+```
+python3 -m pip install -U pygame --user
+python3 -m pygame.examples.aliens
+```
 
-Try `python3 -m pip install -U pygame --user`
+If you can successfully run the command, finished.
 
-Then test by `python3 -m pygame.examples.aliens`
+Or, Try 
+```pip3 install pygame==2.0.0.dev10```
 
-If you can successfully run the command, finished
-
-or
-
-try
-
-`pip3 install pygame==2.0.0.dev10`
+If you still failed please use the `./setup.sh` to set up the environment or google it by yourself.
 
 ## About homework UI
 
-the program simply random the cells then follow the rules to show the game
-and there are two bottom th control the game
+The program simply random the cells then follow the rules to show the game.
 
-press 'r' to re-random the cell 
-press 'q' to quit the game
+And there are two bottoms could control the game:
+
+Press the key `r` to re-random the cells
+
+Press the key`q` to quit the game
