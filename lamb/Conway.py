@@ -8,7 +8,7 @@ class Conway:
     alive = 1
     dead = 0
 
-    def __init__(self, wid=500, hei=500, sz=10, a_c=(255, 255, 255), d_c=(0, 0, 0)):
+    def __init__(self, wid=800, hei=600, sz=10, a_c=(255, 255, 255), d_c=(0, 0, 0)):
 
         self.window_wid = int(wid)
         self.window_hei = int(hei)
@@ -21,6 +21,7 @@ class Conway:
         self.lattice = []
         self.initialize_lattice()
         self.generate_random_cell()
+        #self.set_to_alive()
         self.multi_thread = False
         self.running = True
 
@@ -47,6 +48,10 @@ class Conway:
         for r in range(self.rows):
             for c in range(self.columns):
                 self.lattice[latt][r][c] = Conway.dead
+    def set_to_alive(self, latt=0):
+        for r in range(self.rows):
+            for c in range(self.columns):
+                self.lattice[latt][r][c] = Conway.alive
 
     def clean_up(self):
         self.window.fill(self.dead_color)
@@ -135,10 +140,69 @@ class Conway:
                 if e.type == pygame.KEYDOWN:
                     if e.unicode == 'r':
                         self.generate_random_cell()
+                    if e.unicode == 'j':
+                        self.jet_pattern()
+                    if e.unicode == 'd':
+                        self.set_to_dead()
+                    if e.unicode == 's':
+                        self.shadow_pattern()
                     if e.unicode == 'q':
                         self.running = False
                 if e.type == pygame.QUIT:
                     self.running = False
+
+    def jet_pattern(self):
+        self.lattice[self.using_lattice][2][0] = Conway.alive
+        self.lattice[self.using_lattice][2][1] = Conway.alive
+        self.lattice[self.using_lattice][2][2] = Conway.alive
+        self.lattice[self.using_lattice][0][1] = Conway.alive
+        self.lattice[self.using_lattice][1][2] = Conway.alive
+    def shadow_pattern(self):
+        self.lattice[self.using_lattice][20][50] = Conway.alive
+        self.lattice[self.using_lattice][21][50] = Conway.alive
+        self.lattice[self.using_lattice][22][50] = Conway.alive
+        self.lattice[self.using_lattice][23][50] = Conway.alive
+        self.lattice[self.using_lattice][24][50] = Conway.alive
+        self.lattice[self.using_lattice][25][50] = Conway.alive
+        self.lattice[self.using_lattice][26][50] = Conway.alive
+        self.lattice[self.using_lattice][27][50] = Conway.alive
+        self.lattice[self.using_lattice][20][51] = Conway.alive
+        self.lattice[self.using_lattice][22][51] = Conway.alive
+        self.lattice[self.using_lattice][23][51] = Conway.alive
+        self.lattice[self.using_lattice][24][51] = Conway.alive
+        self.lattice[self.using_lattice][25][51] = Conway.alive
+        self.lattice[self.using_lattice][27][51] = Conway.alive
+        self.lattice[self.using_lattice][21][52] = Conway.alive
+        self.lattice[self.using_lattice][22][52] = Conway.alive
+        self.lattice[self.using_lattice][23][52] = Conway.alive
+        self.lattice[self.using_lattice][24][52] = Conway.alive
+        self.lattice[self.using_lattice][25][52] = Conway.alive
+        self.lattice[self.using_lattice][26][52] = Conway.alive
+        self.lattice[self.using_lattice][27][52] = Conway.alive
+        self.lattice[self.using_lattice][20][52] = Conway.alive
+        
+        self.lattice[self.using_lattice][20][20] = Conway.alive
+        self.lattice[self.using_lattice][21][20] = Conway.alive
+        self.lattice[self.using_lattice][22][20] = Conway.alive
+        self.lattice[self.using_lattice][23][20] = Conway.alive
+        self.lattice[self.using_lattice][24][20] = Conway.alive
+        self.lattice[self.using_lattice][25][20] = Conway.alive
+        self.lattice[self.using_lattice][26][20] = Conway.alive
+        self.lattice[self.using_lattice][27][20] = Conway.alive
+        self.lattice[self.using_lattice][20][21] = Conway.alive
+        self.lattice[self.using_lattice][22][21] = Conway.alive
+        self.lattice[self.using_lattice][23][21] = Conway.alive
+        self.lattice[self.using_lattice][24][21] = Conway.alive
+        self.lattice[self.using_lattice][25][21] = Conway.alive
+        self.lattice[self.using_lattice][27][21] = Conway.alive
+        self.lattice[self.using_lattice][21][22] = Conway.alive
+        self.lattice[self.using_lattice][22][22] = Conway.alive
+        self.lattice[self.using_lattice][23][22] = Conway.alive
+        self.lattice[self.using_lattice][24][22] = Conway.alive
+        self.lattice[self.using_lattice][25][22] = Conway.alive
+        self.lattice[self.using_lattice][26][22] = Conway.alive
+        self.lattice[self.using_lattice][27][22] = Conway.alive
+        self.lattice[self.using_lattice][20][22] = Conway.alive
 
     def launch(self):
         clk = pygame.time.Clock()
