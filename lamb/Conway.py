@@ -21,7 +21,7 @@ class Conway:
         self.lattice = []
         self.initialize_lattice()
         self.generate_random_cell()
-        #self.set_to_alive()
+        # self.set_to_alive()
         self.multi_thread = False
         self.running = True
 
@@ -48,6 +48,7 @@ class Conway:
         for r in range(self.rows):
             for c in range(self.columns):
                 self.lattice[latt][r][c] = Conway.dead
+
     def set_to_alive(self, latt=0):
         for r in range(self.rows):
             for c in range(self.columns):
@@ -157,6 +158,7 @@ class Conway:
         self.lattice[self.using_lattice][2][2] = Conway.alive
         self.lattice[self.using_lattice][0][1] = Conway.alive
         self.lattice[self.using_lattice][1][2] = Conway.alive
+
     def shadow_pattern(self):
         self.lattice[self.using_lattice][20][50] = Conway.alive
         self.lattice[self.using_lattice][21][50] = Conway.alive
@@ -180,7 +182,7 @@ class Conway:
         self.lattice[self.using_lattice][26][52] = Conway.alive
         self.lattice[self.using_lattice][27][52] = Conway.alive
         self.lattice[self.using_lattice][20][52] = Conway.alive
-        
+
         self.lattice[self.using_lattice][20][20] = Conway.alive
         self.lattice[self.using_lattice][21][20] = Conway.alive
         self.lattice[self.using_lattice][22][20] = Conway.alive

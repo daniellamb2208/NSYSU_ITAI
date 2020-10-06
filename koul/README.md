@@ -38,8 +38,18 @@ If you still failed please use the `./setup.sh` to set up the environment or goo
 
 The program simply random the cells then follow the rules to show the game.
 
-And there are two bottoms could control the game:
+And there are some keys could control the game:
 
 Press the key `r` to re-random the cells
 
 Press the key`q` to quit the game
+
+(Before create Pattern of customization, the better way to see is press `d` first)
+
+Press the key `j` to create the jet patteren from upper_left to right_bottom moving
+
+Press the key `s` to create the two shadows on the middle of screen
+
+Press the key `d` to kill all the cells
+
+(there some time delay problems in our game, so if press one time doesn't work correctly, you may press the key again)
