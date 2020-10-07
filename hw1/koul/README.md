@@ -22,6 +22,7 @@ Dependent package: `pygame`
 
 Firstly, please make sure you already have installed the pip tool
 > Try 
+
 ```
 python3 -m pip install -U pygame --user
 python3 -m pygame.examples.aliens
@@ -42,14 +43,16 @@ And there are some keys could control the game:
 
 Press the key `r` to re-random the cells
 
-Press the key`q` to quit the game
+Press the key `q` to quit the game
 
-(Before create Pattern of customization, the better way to see is press `d` first)
+## Customization mode
 
-Press the key `j` to create the jet patteren from upper_left to right_bottom moving
+Press the key `d` to kill all the cells
+> Suggest press the `d` to clean up all cells, before you use this customization mode
+
+Press the key `j` to create the jet pattern from upper_left to right_bottom moving
 
 Press the key `s` to create the two shadows on the middle of screen
 
-Press the key `d` to kill all the cells
-
-(there some time delay problems in our game, so if press one time doesn't work correctly, you may press the key again)
+# Bugs
+It has the delay problems in our game sometime, so if you pressed some keys doesn't work correctly, you may press the key again.
