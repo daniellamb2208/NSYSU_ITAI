@@ -5,9 +5,6 @@ This is the [Introduction to Artificial Intelegence](http://ailab.cse.nsysu.edu.
 
 This repo. is only for co-working out team's porject.
 
-# Project
-The Boids model. In static page.
-
 # Team mamber
 
 Leader: 楊志璿(25077667)
