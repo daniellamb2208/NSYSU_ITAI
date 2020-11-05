@@ -1,12 +1,9 @@
 #include "map.hpp"
-#include <vector>
+#include <array>
 using namespace std;
 
-static const double DISCOUNT_LAMBDA = 1.1;
-
-LocalMap::LocalMap(pos_t pos)
+LocalMap::LocalMap()
 {
-    this->vec = vector<vector<MapObj>>(pos.x, vector<MapObj>(pos.y, MapObj()));
     this->t = thread(sync);
 }
 
@@ -15,31 +12,28 @@ LocalMap::~LocalMap()
     this->t.join();
 }
 
-MapObj &LocalMap::at(pos_t pos)
+MapObj LocalMap::get_at(pos_t pos)
 {
-    return this->vec.at(pos.x).at(pos.y);
+    return (this->arr.at(pos.x).at(pos.y)).load();
 }
 
-void LocalMap::sync()
+void LocalMap::put_at(pos_t pos, MapObj thing)
 {
-    for (auto i : vec)
-        for (auto j : i) {
-            if (j.value < 0.05)
-                j.clean();
-            if (j.type == PHEROMONE)
-                j.pheromone /= DISCOUNT_LAMBDA;
-        }
+    (this->arr.at(pos.x).at(pos.y)).store(thing);
 }
 
 void LocalMap::merge(pos_t pos, MapObj _source)
 {
-    if (_source.type == this->vec.at(pos.x).at(pos.y).type) {
-        this->vec.at(pos.x).at(pos.y).value += _source.value;
-        return;
+    // me is a lvalue of MapObj
+    auto me = this->arr.at(pos.x).at(pos.y).load();
+    // Put at home or type is same
+    if (me.type == HOME || _source.type == me.type) {
+        me.value += _source.value;
+    } else {
+        // one is FOOD, one is PHEROMONE
+        // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
+        me.value = (_source.type == FOOD) ? _source.value : me.value;
+        me.type = FOOD;
     }
-
-    // one is FOOD, one is PHEROMONE
-    auto me = this->vec.at(pos.x).at(pos.y).value;
-    me = (_source.type == FOOD) ? _source.value : me;
-    this->vec.at(pos.x).at(pos.y).type = FOOD;
+    this->arr.at(pos.x).at(pos.y).store(me);
 }

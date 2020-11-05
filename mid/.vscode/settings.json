@@ -1,0 +1,11 @@
+{
+    "files.associations": {
+        "iterator": "cpp",
+        "atomic": "cpp",
+        "array": "cpp",
+        "string_view": "cpp"
+    },
+    "cSpell.ignoreWords": [
+        "jter"
+    ]
+}

@@ -1,17 +1,22 @@
 #ifndef __MAP_HPP__
 #define __MAP_HPP__
+#include <array>
 #include <atomic>
 #include <iterator>
 #include <thread>
-#include <vector>
-#include "ant.hpp"
+#define HEIGHT 600
+#define WIDTH 800
+#define DISAPPEAR_THRESHOLD 0.3
+
+const int DISCOUNT_LAMBDA = 1.1;
+using namespace std;
 
 typedef struct {
     int x;
     int y;
 } pos_t;
 
-enum { EMPTY, FOOD, PHEROMONE };
+enum { EMPTY, FOOD, PHEROMONE, HOME };
 
 class MapObj
 {
@@ -37,24 +42,42 @@ public:
 class LocalMap
 {
 private:
-    // FIXME: need to atomic, prevent race condition
-    vector<vector<MapObj>> vec;
+    // This map is a static 2D array of atomic obj
+    static array<array<atomic<MapObj>, WIDTH>, HEIGHT> arr;
     thread t;
-    // Sync the map obj, create a thread to run it in background
-    void sync();
-
+    // Sync this map obj, create a thread to run it in background
+    static void sync();
 
 public:
-    // The pos is the width(x) and length(y)
-    LocalMap(pos_t pos);
+    LocalMap();
     ~LocalMap();
 
     // Check the the place have someting?
-    MapObj &at(pos_t pos);
+    MapObj get_at(pos_t pos);
+    // Put it forcibly
+    void put_at(pos_t pos, MapObj thing);
 
-    // Merge the income obj, at the place
+    // Merge the income obj at that place
     // might be pheromone, food or empty
     void merge(pos_t pos, MapObj _source);
 };
+
+// Must be static member function
+void LocalMap::sync()
+{
+    // i for first loop, j for second loop,
+    // iterator is the operand named [ij]ter
+    for (auto iter = arr.begin(); iter != arr.end(); iter++)
+        for (auto jter = iter->begin(); jter != iter->end(); jter++) {
+            if (jter->load().type != EMPTY && jter->load().value < 0.03)
+                jter->load().clean();
+            // PHEROMONE will dissipate
+            if (jter->load().type == PHEROMONE) {
+                auto me = jter->load();
+                me.value /= DISCOUNT_LAMBDA;
+                jter->store(me);
+            }
+        }
+}
 
 #endif
