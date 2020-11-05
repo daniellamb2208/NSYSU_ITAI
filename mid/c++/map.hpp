@@ -7,6 +7,7 @@
 #define HEIGHT 600
 #define WIDTH 800
 #define DISAPPEAR_THRESHOLD 0.3
+#define MAX_FOOD (HEIGHT * WIDTH)
 
 const int DISCOUNT_LAMBDA = 1.1;
 using namespace std;
@@ -26,6 +27,7 @@ public:
         this->food = 0;
         this->type = EMPTY;
     }
+    MapObj(double _value) : value(_value), type(FOOD) {}
     void clean()
     {
         this->type = EMPTY;
@@ -59,7 +61,18 @@ public:
 
     // Merge the income obj at that place
     // might be pheromone, food or empty
+    // EMPTY + ANY_TYPE = ANY_TYPE
     void merge(pos_t pos, MapObj _source);
+
+
+    // Generate some foods in random time, place, numbers and value by default
+    // Guarantee no overcommit food(If require more then MAX, will be ignored)
+    friend void foodGenerator(pos_t _pos,
+                              size_t num,
+                              double value,
+                              LocalMap &_map);
+    // Default call this function
+    friend void foodGenerator(LocalMap &_map);
 };
 
 // Must be static member function
@@ -79,5 +92,11 @@ void LocalMap::sync()
             }
         }
 }
+
+// TODO: find some object is closest in the `type`
+// There is some algorithm called "Space Partitioning"
+// https://stackoverflow.com/questions/28154450/find-nearest-object-in-2d-can-it-be-optimised-below-on/28155167#28155167
+pos_t findClosest(pos_t currentPos, int type);
+
 
 #endif

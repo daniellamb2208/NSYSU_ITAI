@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAG = -Og -Os -std=c++17 -Wall
+CPPFLAG = -Og -Os -std=c++2a -Wall
 
 all: clean dep 
 	$(CC) $(CPPFLAG) *.o main.c -o main.elf
