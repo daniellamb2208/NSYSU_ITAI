@@ -1,6 +1,8 @@
 #include "map.hpp"
 #include <array>
+#include <cstring>
 #include <functional>
+#include <future>
 #include <numeric>
 #include <random>
 #include <vector>
@@ -10,6 +12,7 @@ using namespace std;
 static vector<double> separateNormally(size_t num, double value)
 {
     vector<double> result;
+    result.resize(num);
     // TODO: separate `value` into `num` parts by normal distribution
     for (size_t i = 0; i < num; i++)
         result.at(i) = value / num;  // Use uniform currently
@@ -25,9 +28,41 @@ inline double getRand()
     return bind(dis, gen)();
 }
 
+void LocalMap::sync()
+{
+    // i for first loop, j for second loop,
+    // iterator is the operand named [ij]ter
+    for (auto iter = arr.begin(); iter != arr.end(); iter++)
+        for (auto jter = iter->begin(); jter != iter->end(); jter++) {
+            auto obj = jter->load();
+            if (obj.type != EMPTY) {
+                auto preValue = obj.value;
+                if (obj.value < 0.03)
+                    obj.clean();
+                // PHEROMONE will dissipate
+                if (obj.type == PHEROMONE) {
+                    obj.value /= DISCOUNT_LAMBDA;
+                    jter->store(obj);
+                }
+                // Update totalFoods
+                auto origTotalFoods = totalFoods.load();
+                totalFoods.store(origTotalFoods + jter->load().value -
+                                 preValue);
+            }  // Sparse array, skip the EMPTY directly
+        }
+}
+
 LocalMap::LocalMap()
 {
-    this->t = thread(sync);
+    // Initialize arr
+    for (size_t i = 0; i < HEIGHT; i++)
+        for (size_t j = 0; j < WIDTH; j++) {
+            MapObj obj;
+            arr.at(i).at(j) = obj;
+        }
+
+    // Use wrapper function
+    this->t = thread(bind(&LocalMap::sync, this));
     this->totalFoods = 0;
 }
 
@@ -41,14 +76,14 @@ MapObj LocalMap::get_at(pos_t pos)
     return (this->arr.at(pos.x).at(pos.y)).load();
 }
 
-void LocalMap::put_at(pos_t pos, MapObj thing)
+void LocalMap::put_at(pos_t pos, MapObj obj)
 {
     double preValue = get_at(pos).value;
-    (this->arr.at(pos.x).at(pos.y)).store(thing);
+    (this->arr.at(pos.x).at(pos.y)).store(obj);
 
     // Add to objPool, just overwrite it
     // It's needless to free orig obj
-    this->objPool[thing.type][pos] = thing;
+    this->objPool[obj.type][pos] = obj;
 
     // Update objPool
     double postValue = get_at(pos).value;
@@ -58,13 +93,12 @@ void LocalMap::put_at(pos_t pos, MapObj thing)
 
 void LocalMap::merge(pos_t pos, MapObj _source)
 {
-    // me is a rvalue of MapObj
+    // `me` is a rvalue of MapObj
     auto me = this->get_at(pos);
     // Put at home or type is same
     if (me.type == HOME || _source.type == me.type)
         me.value += _source.value;
 
-    // one is FOOD
     // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
     // Bitwise operation, don't touch it if you don't know.
     switch (me.type | _source.type) {
@@ -79,7 +113,7 @@ void LocalMap::merge(pos_t pos, MapObj _source)
         break;
     default:
         throw "TypeError: merge";
-        break;  // Undefined behavior, impossible execute here
+        break;  // Undefined behavior, impossible to execute here
     }
     me.value += _source.value;
     // Give `put_at` to process the objPool problem
@@ -89,7 +123,7 @@ void LocalMap::merge(pos_t pos, MapObj _source)
 pos_t LocalMap::findClosest(const pos_t &currentPos, char type)
 {
     // Designated initializers, after C++20
-    pos_t pos = {.x = HEIGHT, .y = WIDTH};
+    pos_t pos(HEIGHT, WIDTH);
     auto minLen = INFINITY;
 
     // C++17 structured bindings
@@ -101,28 +135,54 @@ pos_t LocalMap::findClosest(const pos_t &currentPos, char type)
         }
     }
 
-    return pos;
+    return pos;  // Find a object is closest in the `type`
 }
 
 // Default callee
-void foodGenerator(LocalMap &_map)
+void LocalMap::foodGenerator()
 {
-    auto value = getRand() * MAX_FOOD * 0.03;  // Up to 3% of MAX
-
-    // Designated initializers, after C++20
-    pos_t pos = {.x = int(getRand() * HEIGHT), .y = int(getRand() * WIDTH)};
+    auto value = getRand() * MAX_FOOD * 0.15;  // Up to 15% of MAX
 
     size_t num = getRand() * 50;  // 50 food? I guess.
-    foodGenerator(pos, num, value, _map);
+    foodGenerator(num, value);
 }
 
-// Separeate foods uniformly
-void foodGenerator(pos_t _pos, size_t num, double value, LocalMap &_map)
+// Separeate foods normally
+void LocalMap::foodGenerator(size_t num, double value)
 {
-    // FIXME: No, we cannot add them all
-    if (value + _map.totalFoods.load() > MAX_FOOD)
+    if (value + this->totalFoods.load() > MAX_FOOD)
         return;
     auto values = separateNormally(num, value);
-    for (auto i : values)
-        _map.merge(_pos, MapObj(i));
+
+    // Because each `pos` obj is independent,
+    // and each obj might have blocking IO from atomic operation
+    // TODO: Parallelize it!
+    for (auto i : values) {
+        pos_t pos(size_t(getRand() * HEIGHT), size_t(getRand() * WIDTH));
+        this->merge(pos, MapObj(i));
+    }
+}
+
+array<array<MapObj, WIDTH>, HEIGHT> LocalMap::shotMap()
+{
+    array<array<MapObj, WIDTH>, HEIGHT> canvax;
+    for (size_t i = 0; i < HEIGHT; i++)
+        for (size_t j = 0; j < WIDTH; j++)
+            canvax.at(i).at(j) = get_at(pos_t(i, j));
+    // Return 2-dimension array of MapObj
+    return canvax;
+}
+
+array<array<double, WIDTH>, HEIGHT> LocalMap::show(bool mode)
+{
+    array<array<double, WIDTH>, HEIGHT> canvax;
+    for (size_t i = 0; i < HEIGHT; i++)
+        for (size_t j = 0; j < WIDTH; j++) {
+            auto obj = get_at(pos_t(i, j));
+            canvax.at(i).at(j) =
+                (double("0FPH"[int(obj.type)] * (!mode))) + (obj.value * mode);
+        }
+    // Return 2-dimension array of double
+    // You should cast the type to char by yourself(if you want type)
+    return canvax;
 }
