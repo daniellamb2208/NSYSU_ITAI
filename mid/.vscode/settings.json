@@ -3,9 +3,15 @@
         "iterator": "cpp",
         "atomic": "cpp",
         "array": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "future": "cpp",
+        "limits": "cpp",
+        "thread": "cpp",
+        "type_traits": "cpp",
+        "chrono": "cpp"
     },
     "cSpell.ignoreWords": [
-        "jter"
+        "jter",
+        "myant"
     ]
 }
