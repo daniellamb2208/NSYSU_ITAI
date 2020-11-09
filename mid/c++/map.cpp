@@ -32,24 +32,29 @@ void LocalMap::sync()
 {
     // i for first loop, j for second loop,
     // iterator is the operand named [ij]ter
-    for (auto iter = arr.begin(); iter != arr.end(); iter++)
+    for (auto iter = arr.begin(); iter != arr.end(); iter++) {
         for (auto jter = iter->begin(); jter != iter->end(); jter++) {
             auto obj = jter->load();
-            if (obj.type != EMPTY) {
-                auto preValue = obj.value;
-                if (obj.value < 0.03)
-                    obj.clean();
-                // PHEROMONE will dissipate
-                if (obj.type == PHEROMONE) {
-                    obj.value /= DISCOUNT_LAMBDA;
-                    jter->store(obj);
-                }
-                // Update totalFoods
-                auto origTotalFoods = totalFoods.load();
-                totalFoods.store(origTotalFoods + jter->load().value -
-                                 preValue);
-            }  // Sparse array, skip the EMPTY directly
+
+            auto preValue = obj.value;
+            auto t = obj.type;
+            pos_t pos(size_t(iter - arr.begin()), size_t(jter - iter->begin()));
+            if (obj.value < 0.03) {
+                obj.clean();
+                // Update objPool if rem
+                this->objPool[t].erase(pos);
+            }
+            // PHEROMONE will dissipate
+            if (obj.type == PHEROMONE) {
+                obj.value /= DISCOUNT_LAMBDA;
+                this->objPool[t][pos] = obj;
+            }
+            jter->store(obj);
+            // Update totalFoods
+            auto origTotalFoods = totalFoods.load();
+            totalFoods.store(origTotalFoods + jter->load().value - preValue);
         }
+    }
 }
 
 LocalMap::LocalMap()
@@ -97,25 +102,30 @@ void LocalMap::merge(pos_t pos, MapObj _source)
     auto me = this->get_at(pos);
     // Put at home or type is same
     if (me.type == HOME || _source.type == me.type)
-        me.value += _source.value;
-
-    // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
-    // Bitwise operation, don't touch it if you don't know.
-    switch (me.type | _source.type) {
-    case (FOOD | PHEROMONE):
-        me.value = (me.type & FOOD) * me.value;
-        _source.value = (_source.type & FOOD) * _source.value;
-    case (FOOD):
-        me.type = FOOD;
-        break;
-    case (PHEROMONE):
-        me.type = PHEROMONE;
-        break;
-    default:
-        throw "TypeError: merge";
-        break;  // Undefined behavior, impossible to execute here
+        _source.value =
+            (me.type + _source.type == HOME + PHEROMONE) ? 0 : _source.value;
+    else {
+        // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
+        // Bitwise operation, don't touch it if you don't know.
+        switch (me.type | _source.type) {
+        case (FOOD | PHEROMONE):
+            me.value = (me.type & FOOD) * me.value;
+            _source.value = (_source.type & FOOD) * _source.value;
+        case (FOOD):
+            me.type = FOOD;
+            break;
+        case (PHEROMONE):
+            me.type = PHEROMONE;
+            break;
+        default:
+            throw "TypeError: merge";
+            break;  // Undefined behavior, impossible to execute here
+        }
     }
-    me.value += _source.value;
+    me.value += _source.value;  // might write negative value in
+    if (me.value < 0)
+        me.clean();
+
     // Give `put_at` to process the objPool problem
     this->put_at(pos, me);
 }
@@ -123,12 +133,13 @@ void LocalMap::merge(pos_t pos, MapObj _source)
 pos_t LocalMap::findClosest(const pos_t &currentPos, char type)
 {
     // Designated initializers, after C++20
-    pos_t pos(HEIGHT, WIDTH);
+    pos_t pos(-1, -1);
     auto minLen = INFINITY;
 
     // C++17 structured bindings
     for (auto &[_pos, obj] : this->objPool[type]) {
-        double len = currentPos - _pos;
+        double len = abs(long(_pos.x) - long(currentPos.x)) +
+                     abs(long(_pos.y) - long(currentPos.y));
         if (len < minLen) {
             minLen = len;
             pos = _pos;
@@ -141,7 +152,7 @@ pos_t LocalMap::findClosest(const pos_t &currentPos, char type)
 // Default callee
 void LocalMap::foodGenerator()
 {
-    auto value = getRand() * MAX_FOOD * 0.15;  // Up to 15% of MAX
+    auto value = int(getRand() * MAX_FOOD);  // Up to 15% of MAX
 
     size_t num = getRand() * 50;  // 50 food? I guess.
     foodGenerator(num, value);

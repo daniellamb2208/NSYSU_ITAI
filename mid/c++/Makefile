@@ -3,7 +3,7 @@ CPPFLAG = -Og -Os -std=c++2a -Wall -lpthread -latomic -g
 LD = /usr/bin/ld
 
 all: clean dep 
-	$(CC) *.o -lpthread -latomic -o main.elf
+	$(CC) *.o -lpthread -latomic -lstdc++ -o main.elf -fsanitize=address
 
 dep:
 	$(CC) $(CPPFLAG) -c map.cpp

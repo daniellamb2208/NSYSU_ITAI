@@ -8,10 +8,25 @@
         "limits": "cpp",
         "thread": "cpp",
         "type_traits": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "*.tcc": "cpp",
+        "deque": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "optional": "cpp",
+        "string": "cpp",
+        "functional": "cpp",
+        "istream": "cpp",
+        "new": "cpp",
+        "ostream": "cpp",
+        "ranges": "cpp",
+        "system_error": "cpp"
     },
     "cSpell.ignoreWords": [
+        "closest",
+        "closest phermone",
         "jter",
-        "myant"
+        "myant",
+        "phermone"
     ]
 }

@@ -8,8 +8,8 @@ using namespace std;
 #define STEP 1
 #define CHILDREN_BASE 30
 #define MAXSTEP 1500
-#define SLEEP_DURATION 100  // micro_seconds
-#define PHEROMONE_FREQUENCY 10
+#define SLEEP_DURATION 0  // micro_seconds
+#define PHEROMONE_FREQUENCY 1
 
 /**
  * Inheritance Graph:
@@ -95,8 +95,8 @@ public:
     NonBreedAnt() = default;
     NonBreedAnt(LocalMap *_myMap);
     ~NonBreedAnt();
-    // Take current pos obj to dest
-    void take(MapObj &obj, pos_t dest);
+    // Take current pos for some food
+    void take(MapObj obj);
 };
 
 // ----------------
@@ -104,7 +104,7 @@ public:
 class Queen : public BreedAnt
 {
 protected:
-    vector<reference_wrapper<Ant>> slave;
+    vector<shared_ptr<Ant>> slave;
     vector<shared_ptr<Queen>> *queenPtrPool;
 
 public:
@@ -120,7 +120,7 @@ public:
     // find Male ant, in order to mate
     const bool findMale();
     void setQPP(vector<shared_ptr<Queen>> *_queenPtrPool);
-    vector<reference_wrapper<Ant>> &getSlave();
+    vector<shared_ptr<Ant>> &getSlave();
 };
 
 class Male : public BreedAnt
