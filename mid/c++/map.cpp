@@ -3,6 +3,7 @@
 #include <cstring>
 #include <functional>
 #include <future>
+#include <iostream>
 #include <numeric>
 #include <random>
 #include <vector>
@@ -30,30 +31,49 @@ inline double getRand()
 
 void LocalMap::sync()
 {
-    // i for first loop, j for second loop,
-    // iterator is the operand named [ij]ter
-    for (auto iter = arr.begin(); iter != arr.end(); iter++) {
-        for (auto jter = iter->begin(); jter != iter->end(); jter++) {
-            auto obj = jter->load();
+    while (true) {
+        map<char, pos_t> toBeDeleted;
+        // i for first loop, j for second loop,
+        // iterator is the operand named [ij]ter
+        for (auto iter = arr.begin(); iter != arr.end(); iter++) {
+            for (auto jter = iter->begin(); jter != iter->end(); jter++) {
+                auto obj = jter->load();
 
-            auto preValue = obj.value;
-            auto t = obj.type;
-            pos_t pos(size_t(iter - arr.begin()), size_t(jter - iter->begin()));
-            if (obj.value < 0.03) {
-                obj.clean();
-                // Update objPool if rem
-                this->objPool[t].erase(pos);
+                auto preValue = obj.value;
+                auto t = obj.type;
+                pos_t pos(size_t(iter - arr.begin()),
+                          size_t(jter - iter->begin()));
+                if (obj.value < 0.03) {
+                    obj.clean();
+                    // Update objPool if it was cleaned
+                    toBeDeleted.insert(make_pair(t, pos));
+                }
+                // PHEROMONE will dissipate
+                if (obj.type == PHEROMONE) {
+                    obj.value /= DISCOUNT_LAMBDA;
+                    this->objPool[t][pos] = obj;
+                }
+                // Update the array
+                jter->store(obj);
+                // Update totalFoods
+                auto origTotalFoods = totalFoods.load();
+                totalFoods.store(origTotalFoods + jter->load().value -
+                                 preValue);
             }
-            // PHEROMONE will dissipate
-            if (obj.type == PHEROMONE) {
-                obj.value /= DISCOUNT_LAMBDA;
-                this->objPool[t][pos] = obj;
-            }
-            jter->store(obj);
-            // Update totalFoods
-            auto origTotalFoods = totalFoods.load();
-            totalFoods.store(origTotalFoods + jter->load().value - preValue);
         }
+        for (auto &[type, _pos] : toBeDeleted)
+            objPool[type].erase(_pos);
+
+        // Show objPool
+        /*
+        for (auto &[type, info] : objPool) {
+            cout << int(type) << ": ";
+            for (auto [pos, obj] : info) {
+                cout << "(" << pos.x << ", " << pos.y << ") " << obj.value
+                     << endl;
+            }
+        }*/
+        foodGenerator();
     }
 }
 

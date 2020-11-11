@@ -26,9 +26,18 @@ typedef struct _p {
     _p(double _x, double _y) : x(long(_x)), y(long(_y)) {}
     _p(int _x, int _y) : x(_x), y(_y) {}
     // Length of distance
-    friend double operator-(const struct _p(&a), const struct _p(&b))
+    friend double distance(const struct _p(&a), const struct _p(&b))
     {
         return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+    }
+    friend double abs(const _p &a) { return sqrt(a.x * a.x + a.y * a.y); }
+    friend double cos(const struct _p(&a), const struct _p(&b))
+    {
+        return (a.x * b.x + a.y * b.y) / (abs(a) * abs(b));
+    }
+    friend double operator*(const struct _p(&a), const struct _p(&b))
+    {
+        return a.x * b.x + a.y * b.y;
     }
     friend bool operator<(const struct _p(&a), const struct _p(&b))
     {
@@ -42,17 +51,29 @@ typedef struct _p {
     {
         return (a.x == b.x && a.y == b.y);
     }
-    _p &operator=(const _p a)
+    _p &operator=(const struct _p a)
     {
         this->x = a.x;
         this->y = a.y;
         return *this;
     }
-    _p operator+(const _p &other)
+    _p operator+(const struct _p &other)
     {
         return _p(this->x + other.x, this->y + other.y);
     }
+    _p operator-(const struct _p &other)
+    {
+        return _p(this->x - other.x, this->y - other.y);
+    }
+    // Dot product
+    // this: current position
+    // parameter: home
+    double operator*(const struct _p &other)
+    {
+        return this->x * other.x + this->y * other.y;
+    }
 } pos_t;
+
 
 class MapObj
 {

@@ -5,6 +5,8 @@
 #include "map.hpp"
 using namespace std;
 
+// Parameters are modifiable
+// Changing to observe the ant behaviour 
 #define STEP 1
 #define CHILDREN_BASE 30
 #define MAXSTEP 1500
@@ -104,7 +106,8 @@ public:
 class Queen : public BreedAnt
 {
 protected:
-    vector<shared_ptr<Ant>> slave;
+    // FIXME: Bug here
+    shared_ptr<vector<shared_ptr<Ant>>> slave;
     vector<shared_ptr<Queen>> *queenPtrPool;
 
 public:
@@ -120,7 +123,8 @@ public:
     // find Male ant, in order to mate
     const bool findMale();
     void setQPP(vector<shared_ptr<Queen>> *_queenPtrPool);
-    vector<shared_ptr<Ant>> &getSlave();
+    shared_ptr<vector<shared_ptr<Ant>>> &getSlave();
+    pos_t getPos() { return this->pos; }
 };
 
 class Male : public BreedAnt

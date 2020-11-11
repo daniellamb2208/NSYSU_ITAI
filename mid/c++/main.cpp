@@ -33,14 +33,55 @@ int main()
     while (!queenPtrPool.empty()) {  // still have ants
         for (auto &i : queenPtrPool) {
             i.get()->job();  // queen or Virgin job
-            if (&i->getSlave())
-                for (auto j : i->getSlave())
-                    j->job();  // slave job
-            // cout << i->getSlave().size() << endl;
+            for (auto j = i->getSlave()->begin(); j != i->getSlave()->end();
+                 j++)
+                j->get()->job();  // slave job
         }
         printMap(&localMap, 1);
         printMap(&localMap, 0);
-        // sleep(1);
+        sleep(0.5);
     }
     return 0;
 }
+
+/**
+ *
+ * Many many ants
+ *                         -----------
+ *                        |    Ant    |    X   N
+ *                         -----------
+ *                         /         \
+ *                        /           \
+ *                       /             \
+ *                 -----------         -----------
+ *                |   Breed   |       | Non-breed |
+ *                 -----------         -----------
+ *               /           \            /      \
+ *           ------       -------      -------    ------
+ *          | Male |   →→| Queen | ←  |Soldier|  |Worker|
+ *           ------    ↑  -------  ↑   -------    -------
+ *              ↓→→→→→→→     |     ↑------↓         ↓
+ *                 sex    --------     protect      ↓
+ *                       | Virgin |                 ↓
+ *                        --------                  ↓     pick/put some things
+ *                           ↓                      ↓
+ *                       pregnant                   ↓
+ *-------------------ground----------------------------------
+ *
+ *  --------
+ * |  Sync  | - Synchronize the ground.
+ *  --------        Self-management, Just like the Earth will balance the
+ *                  environment autometically.
+ *
+ *  --------
+ * |  merge  | - Merge objects(You pick/put something on the ground).
+ *  --------        Like a system call, kernel will help you to handle it.
+ *
+ *
+ *
+ *  -----------------
+ * |  food generator | - Earth will give animals food to live.
+ *  -----------------
+ *
+ *
+ */

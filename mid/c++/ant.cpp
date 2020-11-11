@@ -29,12 +29,6 @@ static inline void go(pos_t &curr, const pos_t &dest)
         curr.y = WIDTH - 1;
 }
 
-template <typename Base, typename T>
-inline bool instanceof (const T &)
-{
-    return std::is_base_of<Base, T>::value;
-}
-
 Ant::~Ant() {}
 
 void Ant::setStep(int _step)
@@ -51,6 +45,7 @@ void Ant::die()
 {
     if (this->myObj.value > 0)
         myMap->merge(this->pos, this->myObj);
+    this->~Ant();
 }
 
 void Ant::sync() {}
@@ -138,8 +133,10 @@ Queen::Queen(LocalMap *_myMap,
     myMap = _myMap;
     pos = _pos;
     this->queenPtrPool = _queenPtrPool;
-    std::cout << "hi, I am queen" << endl;
+    cout << "hi, I am queen" << endl;
     this->setAppetite(2);
+    this->slave =
+        make_shared<vector<shared_ptr<Ant>>>(vector<shared_ptr<Ant>>());
 }
 
 Queen::~Queen()
@@ -174,8 +171,8 @@ int Queen::pregnant()
             partial.value /= 20;  // pick up some orig value
             prototype->myObj = partial;
             prototype->pos = pos_t(getRand() * HEIGHT, getRand() * WIDTH);
-            prototype->slave = vector<shared_ptr<Ant>>();
-            prototype->slave.clear();
+            prototype->slave =
+                make_shared<vector<shared_ptr<Ant>>>(vector<shared_ptr<Ant>>());
             prototype->queenPtrPool->push_back(prototype);
             continue;
         } else if (selectIndex < 20) {  // Male
@@ -183,26 +180,26 @@ int Queen::pregnant()
             setAttr(prototype);
             prototype->setAppetite(0.7);
             prototype->setMyQueen(this);
-            this->slave.push_back(prototype);
+            this->slave->push_back(prototype);
         } else if (selectIndex < 40) {  // Soldier
             shared_ptr<Soldier> prototype = make_shared<Soldier>();
             setAttr(prototype);
             prototype->setMyQueen(this);
             prototype->setProtectDistance(10);
-            this->slave.push_back(prototype);
+            this->slave->push_back(prototype);
 
         } else {  // Worker
             shared_ptr<Worker> prototype = make_shared<Worker>();
             setAttr(prototype);
             prototype->setMyQueen(this);
-            this->slave.push_back(prototype);
+            this->slave->push_back(prototype);
         }
         usleep(SLEEP_DURATION);
     }
     return num;
 }
 
-vector<shared_ptr<Ant>> &Queen::getSlave()
+shared_ptr<vector<shared_ptr<Ant>>> &Queen::getSlave()
 {
     return this->slave;
 }
@@ -210,9 +207,11 @@ vector<shared_ptr<Ant>> &Queen::getSlave()
 // Thoughts: food centrally controlled by Queen ant
 void Queen::job()
 {
+    static bool dbg = true;
     if (this->myMap->get_at(this->pos).food > 0) {
         this->eat();
-        if (findMale()) {
+        if (findMale() && dbg) {
+            // dbg = false;
             pregnant();
         } else {  // If not found Male, go sleep and make a `Male`
             usleep(SLEEP_DURATION);
@@ -222,13 +221,11 @@ void Queen::job()
             prototype->setStep(MAXSTEP);
             prototype->setMyQueen(this);
             prototype->setAppetite(0.7);
-            this->slave.push_back(prototype);
+            this->slave->push_back(prototype);
         }
     } else {
         cout << "Die" << endl;
         this->die();
-        // FIXME : UGLY
-        // this->~Queen();
     }
 }
 
@@ -237,14 +234,23 @@ inline const bool Queen::findMale()
     // Sensor if any Male ant on itself(position overlap)
     // if sensored, mate with it, and Male ant will die
 
-    for (auto iter = this->slave.begin(); iter != this->slave.end(); iter++) {
+
+    vector<shared_ptr<Ant>>::iterator toBeDeleted = this->slave->end();
+    for (auto iter = this->slave->begin(); iter != this->slave->end(); iter++) {
         if (dynamic_cast<Male *>(iter->get()) != nullptr &&
             iter->get()->at() == this->pos) {
             // erase it will be destructed automatically
-            this->slave.erase(iter);
-            return true;
+            toBeDeleted = iter;
+            break;
         }
     }
+
+    if (toBeDeleted != this->slave->end()) {
+        this->slave->erase(toBeDeleted);
+        return true;
+    }
+
+
 
     return false;
 }
@@ -272,7 +278,7 @@ void Male::job()
         // Hanging around Queen ant
         auto origPos = getQueenPos();
         auto entropy = getRand() * 3;
-        if ((this->pos - origPos) < entropy) {
+        if (distance(this->pos, origPos) < entropy) {
             // Too close, leave more
             pos_t target(getRand() * HEIGHT, getRand() * WIDTH);
             go(this->pos, target);
@@ -311,6 +317,8 @@ void Soldier::job()
             go(this->pos, target);
             usleep(SLEEP_DURATION);
         }
+    } else {
+        this->die();
     }
 }
 
@@ -341,13 +349,24 @@ void Worker::wandering()
 
 void Worker::job()
 {
+    // cout << this << ": " << this->pos.x << " " << this->pos.y << endl;
     if (this->step--) {
+        // To-go vector
         pos_t target;
+        // Normal vector
+        pos_t direction = this->pos - this->myQueen->getPos();
+        //  (to-go DOT normal) >= 0 means never go back
+        //  Try to calculate inner prodcut of target and direction
+        //  Condition charged by last line in the while loop to check
+        //  if it will go back, follow normal vector to move a step
+
         if (this->myObj.type == EMPTY) {
             auto closestFood = this->myMap->findClosest(this->pos, FOOD);
             auto closestPhermone =
                 this->myMap->findClosest(this->pos, PHEROMONE);
-            if (closestPhermone == pos_t(-1, -1))  // Not found
+
+            if (closestPhermone ==
+                pos_t(-1, -1))  // Not found pheromone, go closest food
                 target = closestFood;
             else {
                 auto phermone = this->myMap->get_at(closestPhermone);
@@ -360,25 +379,36 @@ void Worker::job()
             if (this->pos == closestFood && this->myObj.type != HOME) {
                 this->take(this->myMap->get_at(pos));
             }
+
+            // Responsible for ensuring not go back
+            // if dot operator result < 0, means go back
+            // target = direction means to forward a step to far away from home
+            // a ． b = |a||b|cos(theta)
+            // cos(theta) = a ． b / (|a||b|)
+            if (cos(direction, target) < 0)
+                target = direction;
         }
+
         if (this->myObj.type == FOOD) {  // Go home
             target = this->myQueen->at();
             // Every time period put PHEROMONE
-//            if (!(this->step % PHEROMONE_FREQUENCY))
-                putPheromone();
+            //            if (!(this->step % PHEROMONE_FREQUENCY))
+            putPheromone();
             if (this->pos == target) {
                 this->myMap->merge(this->pos, this->myObj);
                 this->myObj.clean();
             }
         }
         go(this->pos, target);
+    } else {
+        this->die();
     }
     usleep(SLEEP_DURATION);
 }
 
 void Worker::putPheromone()
 {
-    // log_{1.1}^10 = 24.1588
-    // After 24 SLEEP_DURATION will disappear
-    myMap->merge(pos, MapObj(10, PHEROMONE));
+    // log_{1.1}^100 = 42
+    // After 42 SLEEP_DURATION will disappear
+    myMap->merge(pos, MapObj(100, PHEROMONE));
 }
