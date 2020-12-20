@@ -154,7 +154,6 @@ class Worker : public Job
     void eat() final { me->set_energy(me->get_energy() - 1); }
     void put_pheromone(pos_t pos);
     int get_food() final;
-    int get_food() final;
 
 public:
     Worker(Ant *_me = nullptr) : me(_me) {}
