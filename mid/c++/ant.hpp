@@ -1,180 +1,177 @@
 #ifndef __ANT_HPP__
 #define __ANT_HPP__
 
+#include <unistd.h>
 #include <vector>
 #include "map.hpp"
 using namespace std;
 
 // Parameters are modifiable
-// Changing to observe the ant behaviour 
+// Changing to observe the ant behaviour
 #define STEP 1
 #define CHILDREN_BASE 30
 #define MAXSTEP 1500
-#define SLEEP_DURATION 0  // micro_seconds
+#define MAXENERGY 1500
+#define SLEEP_DURATION 100  // micro_seconds
 #define PHEROMONE_FREQUENCY 1
+#define QUEEN_SLEEP 10
 
 /**
- * Inheritance Graph:
  *                   -----------
  *                  |    Ant    |
  *                   -----------
- *                   /         \
- *                  /           \
- *                 /             \
- *            -----------         -----------
- *           |   Breed   |       | Non-breed |
- *            -----------         -----------
- *            /        \            /      \
- *        ------    -------      -------    ------
- *       | Male |  | Queen |    |Soldier|  |Worker|
- *        ------    -------      -------    -------
- *                     |
- *                  --------
- *                 | Virgin |
- *                  --------
+ *          A generic ant with strategy pattern
  *
  */
 
-// TODO: Use `Queen` to control all slave ant
+enum class Job_Code : int {
+    queen,
+    virgin,
+    male,
+    solder,
+    worker,
+    End,  // Could add more job of ants, before End
+};
 
-// Declare
-class Queen;
-class Male;
-class Virgin;
-class Soldier;
-class Worker;
+class Job;
 
 class Ant
 {
 protected:
-    LocalMap *myMap;
+    Job_Code my_job_code = Job_Code::worker;
+    LocalMap *myMap = nullptr;
     // My position
     // Every steps should udpate this pos
-    pos_t pos;
+    pos_t pos = pos_t();
+    pos_t my_queen_pos = pos_t();
     // Descent form threshold(MAXSTEP), will die if count to zero.
-    int step;
-    // An object on the ant.
-    MapObj myObj;
-    Queen *myQueen;
+    int step = MAXSTEP;
+    // Descenting energy, can be increased by eat food, but will die if count to
+    // zero.
+    int energy = MAXENERGY;
+
+
+    friend class Job;  // Make Job could access *this directly
+    Job *job = nullptr;
 
 public:
-    Ant() = default;
-    ~Ant();
-    pos_t &at();
-    void setStep(int _step);
-    const int getStep();
-    // Call distructor
-    void die();
-    void sync();
-    void setMap(LocalMap *_myMap);
-    LocalMap *getMap();
-    MapObj getObj();
-    void setMyQueen(Queen *_myQueen);
-    pos_t getQueenPos();
-    virtual void job() = 0;
+    Ant() = delete;
+    Ant(int job_code);  // set job by number,
+    Ant(Job *_job = nullptr) : job(_job) {}
+    ~Ant() { delete this->job; }
+    pos_t &at() { return this->pos; }
+    void set_step(int _step) { this->step = _step; }
+    const int get_step() const { return this->step; }
+    void set_job(Job *_job)
+    {
+        delete this->job;
+        this->job = _job;
+    }
+    void set_map(LocalMap *_myMap) { this->myMap = _myMap; }
+    LocalMap *get_map() { return this->myMap; }
+    void set_queen_pos(Ant *queen) { this->my_queen_pos = queen->at(); }
+    pos_t get_queen_pos() { return this->my_queen_pos; }
+    int get_energy() const { return this->energy; }
+    void set_energy(int _value) { this->energy = _value; }
+    Job_Code get_job_code() { return this->my_job_code; }
 };
 
-// ----------------
+// -----------------
 
-class BreedAnt : public Ant
+class Job
 {
 protected:
-    // Who has fertility, eat food
-    double appetite;
+    virtual void work() = 0;
+    // Eat the food which it get
+    virtual void eat() = 0;
+    // Different ant eat different food
+    // For example: Worker eat its own food first
+    //              Bet the Queen, Solder, Male, Virgin would eat the food
+    //              from home first
+    // This function will consume food from env. to itself.
+    // If not found, return 0.
+    virtual int get_food() = 0;
 
 public:
-    BreedAnt() = default;
-    BreedAnt(LocalMap *_myMap, double _appetite = 2);
-    ~BreedAnt();
-    void setAppetite(double);
-    double getAppetite();
-    void eat();
+    virtual ~Job() {}
+    // Each ant will be called by `do_job()`
+    void do_job()
+    {
+        work();
+        eat();
+    }
 };
 
-class NonBreedAnt : public Ant
+class Queen : public Job
 {
-public:
-    NonBreedAnt() = default;
-    NonBreedAnt(LocalMap *_myMap);
-    ~NonBreedAnt();
-    // Take current pos for some food
-    void take(MapObj obj);
-};
+    vector<Ant> my_slave;
+    Ant *me;
+    void do_sleep() { sleep(QUEEN_SLEEP); }
+    bool find_male();
+    bool bleed() { return find_male(); }
+    void pregnant(Job_Code _gift);  // job code with gift
+    void work() final;
+    void eat() final { me->set_energy(me->get_energy() - 100); }
+    int get_food() final;
 
-// ----------------
-
-class Queen : public BreedAnt
-{
-protected:
-    // FIXME: Bug here
-    shared_ptr<vector<shared_ptr<Ant>>> slave;
-    vector<shared_ptr<Queen>> *queenPtrPool;
+    // Warning: Queen's my_queen_pos is undefined!
 
 public:
-    Queen() = default;
-    Queen(LocalMap *_myMap,
-          pos_t _pos,
-          vector<shared_ptr<Queen>> *queenPtrPool);
+    Queen(Ant *_me = nullptr) : me(_me) {}
     ~Queen();
-    // Consume some food then sleep
-    int pregnant();
-    // Loop eat, mate and pregnant
-    void job();
-    // find Male ant, in order to mate
-    const bool findMale();
-    void setQPP(vector<shared_ptr<Queen>> *_queenPtrPool);
-    shared_ptr<vector<shared_ptr<Ant>>> &getSlave();
-    pos_t getPos() { return this->pos; }
 };
 
-class Male : public BreedAnt
+class Male : public Job
 {
+    Ant *me;
+    void work() final;
+    void eat() final { me->set_energy(me->get_energy() - 80); }
+    int get_food() final;
+
 public:
-    Male() = default;
-    Male(LocalMap *_myMap);
+    Male(Ant *_me = nullptr) : me(_me) {}
     ~Male();
-    void setAppetite(double _appetite);
-    // Mate with queen or eat food
-    void job();
-    // If mated once, die
 };
 
-class Virgin : public Queen
+class Virgin : public Job
 {
+    Ant *me;
+    void work() final;
+    // Eat nothing
+    void eat() final {}
+    int get_food() final {}
+
 public:
-    Virgin() = default;
-    Virgin(LocalMap *_myMap);
+    Virgin(Ant *_me = nullptr) : me(_me) {}
     ~Virgin();
-    // Move some resource to create a new empire
 };
 
-class Soldier : public NonBreedAnt
+
+class Worker : public Job
 {
-    double portectDistance;
+    Ant *me;
+    void work() final;
+    void eat() final { me->set_energy(me->get_energy() - 1); }
+    void put_pheromone(pos_t pos);
+    int get_food() final;
+    int get_food() final;
 
 public:
-    Soldier() = default;
-    Soldier(LocalMap *_myMap);
-    ~Soldier();
-    void setProtectDistance(double pd);
-    void job();
-    // TODO: Protect queen
-};
-
-class Worker : public NonBreedAnt
-{
-public:
-    Worker() = default;
-    Worker(LocalMap *_myMap);
+    Worker(Ant *_me = nullptr) : me(_me) {}
     ~Worker();
-    void wandering();
-    void putPheromone();
-    void job();
-
-private:
-    // Once take food, record is there still remaining food
-    // If remaining, give value true, and vice versa
-    bool remaining;
 };
+
+class Soldier : public Job
+{
+    Ant *me;
+    void work() final;
+    void eat() final;
+    int get_food() final;
+
+public:
+    Soldier(Ant *_me = nullptr) : me(_me) {}
+    ~Soldier();
+};
+
 
 #endif
