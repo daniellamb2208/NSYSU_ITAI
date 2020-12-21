@@ -73,6 +73,8 @@ public:
     Job_Code get_job_code() { return this->my_job_code; }
     bool get_live_status() { return this->is_alive; }
     void set_live_status(bool status) { this->is_alive = status; }
+
+    Ant &operator=(Ant &&) = default;
 };
 
 // -----------------
@@ -148,7 +150,7 @@ class Virgin : public Job
     void work() final;
     // Eat nothing
     void eat() final {}
-    int get_food() final {}
+    int get_food() final { return 0; }
     void alive_handler() final;
 
 public:

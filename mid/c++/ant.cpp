@@ -97,6 +97,7 @@ void Queen::work()
             if (i * i * i < opcode)
                 return i;
         }
+        return 0;
     };
 
     // Pregnant process
