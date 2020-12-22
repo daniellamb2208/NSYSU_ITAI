@@ -24,23 +24,26 @@ void printMap(LocalMap *localMap, int p)
 int main()
 {
     LocalMap localMap;
-    localMap.foodGenerator();
     localMap.put_at(pos_t(0, 0), MapObj(1 << 30, HOME));
 
-    vector<shared_ptr<Queen>> queenPtrPool = {
-        make_shared<Queen>(&localMap, pos_t(0, 0), &queenPtrPool)};
+    vector<Ant> ant_pool;
+    for (int i = 0; i < 1; i++)
+        ant_pool.push_back(move(Ant(&localMap, pos_t(0, 0))));
+    while (!ant_pool.empty()) {
+        for (auto &i : ant_pool)
+            i.job->do_job();
 
-    while (!queenPtrPool.empty()) {  // still have ants
-        for (auto &i : queenPtrPool) {
-            i.get()->job();  // queen or Virgin job
-            for (auto j = i->getSlave()->begin(); j != i->getSlave()->end();
-                 j++)
-                j->get()->job();  // slave job
+        // Collect dead ant
+        for (auto iter = ant_pool.begin(); iter != ant_pool.end();) {
+            if (iter->get_live_status() == STATUS::DEAD)
+                iter = ant_pool.erase(iter);
+            else
+                iter++;
         }
         printMap(&localMap, 1);
         printMap(&localMap, 0);
-        sleep(0.5);
     }
+
     return 0;
 }
 

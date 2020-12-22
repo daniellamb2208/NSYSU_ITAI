@@ -72,11 +72,11 @@ void walk(Ant *me, pos_t oriented)
 
 };  // namespace Detail
 
-static inline bool __alive_handler(Ant *me)
+static inline STATUS __alive_handler(Ant *me)
 {
     // Check and set
     if (me->get_step() == 0 || me->get_energy() == 0)
-        me->set_live_status(false);
+        me->set_live_status(STATUS::DEAD);
 
     return me->get_live_status();
 }

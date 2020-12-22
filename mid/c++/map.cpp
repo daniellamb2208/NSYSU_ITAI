@@ -62,6 +62,7 @@ inline bool operator!=(const pos_t a, const pos_t b)
 pos_t &pos_t::operator=(const pos_t src)
 {
     memcpy(this, &src, sizeof(src));
+    return *this;
 }
 
 pos_t pos_t::operator+(const pos_t other)

@@ -24,6 +24,11 @@ double std_normal()
     return bind(dis, gen)();                // bind and call
 }
 
+enum class STATUS : bool {
+    DEAD,
+    ALIVE,
+};
+
 /**
  * All the ants are worker.
  *
@@ -43,18 +48,20 @@ private:
     // Descenting energy, can be increased by eat food, but will die if
     // count to zero.
     int energy = MAXENERGY;
-    bool is_alive = true;
+    STATUS is_alive = STATUS::ALIVE;
 
 protected:
     friend class Job;  // Make Job could access *this directly
-    unique_ptr<Job> job = nullptr;
+
 
 public:
     Ant() = delete;
     Ant(LocalMap *_map, pos_t _my_home);
-    // Ant(int job_code);  // set job by number,
-    // Ant(Job *_job = nullptr) : job(_job) {}
+    Ant(const Ant &) = delete;
+    Ant &operator=(const Ant &) = delete;
+    Ant &operator=(Ant &&) = default;
     ~Ant() = default;
+
     pos_t &at() { return this->pos; }
     void set_step(int _step) { this->step = _step; }
     const int get_step() const { return this->step; }
@@ -63,11 +70,11 @@ public:
     LocalMap *get_map() { return this->myMap; }
     int get_energy() const { return this->energy; }
     void set_energy(int _value) { this->energy = _value; }
-    bool get_live_status() { return this->is_alive; }
-    void set_live_status(bool status) { this->is_alive = status; }
+    STATUS get_live_status() { return this->is_alive; }
+    void set_live_status(STATUS status) { this->is_alive = status; }
     pos_t &home() { return this->home_pos; }
 
-    Ant &operator=(Ant &&) = default;
+    unique_ptr<Job> job;
 };
 
 class Job
@@ -83,7 +90,7 @@ protected:
     virtual void clean() = 0;
 
 public:
-    ~Job() { clean(); }
+    virtual ~Job();
     // Each ant will be called by `do_job()`
     void do_job()
     {
@@ -115,6 +122,7 @@ public:
     {
         oriented = pos_t(std_normal() > 0, std_normal() > 0);
     }
+    ~Worker() { clean(); }
 };
 
 #endif
