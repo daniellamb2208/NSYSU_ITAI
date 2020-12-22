@@ -24,7 +24,7 @@ void printMap(LocalMap *localMap, int p)
 int main()
 {
     LocalMap localMap;
-    localMap.foodGenerator();
+    localMap.food_gen();
     localMap.put_at(pos_t(0, 0), MapObj(0, HOME));
 
     vector<Ant> ant_pool;

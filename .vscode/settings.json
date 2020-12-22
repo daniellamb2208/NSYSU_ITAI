@@ -8,6 +8,10 @@
         "functional": "cpp",
         "ranges": "cpp",
         "atomic": "cpp",
-        "chrono": "cpp"
-    }
+        "chrono": "cpp",
+        "array": "cpp"
+    },
+    "cSpell.ignoreWords": [
+        "jter"
+    ]
 }

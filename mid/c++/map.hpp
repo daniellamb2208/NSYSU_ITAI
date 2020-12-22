@@ -57,19 +57,15 @@ public:
     };
     char type;
     MapObj operator+(const MapObj other);
+    MapObj &operator=(const MapObj &_source) = default;
 };
 
 class LocalMap
 {
 private:
-    atomic<double> totalFoods;
+    atomic<double> tot_foods;
     // This map is a static 2D array of atomic obj
     array<array<atomic<MapObj>, WIDTH>, HEIGHT> arr;
-    // This is a naive way to find the closest obj
-    // Store all PHEROMONE and FOOD's position to this obj pool
-    // And brute force linear searching all obj
-    // Access by objPool[FOOD][pos];
-    map<char, map<pos_t, MapObj>> objPool;
     thread t;
     // Sync this map obj, create a thread to run it in background
     void sync();
@@ -90,16 +86,10 @@ public:
 
     // Generate some foods in random time, place, numbers and value by default
     // Guarantee no overcommit food(If require more then MAX, will be ignored)
-    void foodGenerator(size_t num, double value);
+    void food_gen(size_t num, double value);
     // Default call this function
-    void foodGenerator();
+    void food_gen();
 
-    // Find a object is closest in the `type`
-    // There is some algorithm called "Space Partitioning"
-    // https://stackoverflow.com/questions/28154450/find-nearest-object-in-2d-can-it-be-optimised-below-on/28155167#28155167
-    pos_t findClosest(const pos_t &currentPos, char type);
-
-    array<array<MapObj, WIDTH>, HEIGHT> shotMap();
     // `mode` 0: Array of types of obj,
     //      you should cast the type to char by yourself
     // `mode` 1: Array of value of obj
