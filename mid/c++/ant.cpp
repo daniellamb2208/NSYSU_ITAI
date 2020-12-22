@@ -1,5 +1,8 @@
 #include "ant.hpp"
+#include <functional>
+#include <iostream>
 #include <memory>
+#include <random>
 using namespace std;
 #define WORKER_APPETITE 1
 
@@ -97,6 +100,16 @@ Ant::Ant(LocalMap *_map, pos_t _my_home)
     this->home_pos = _my_home;
 }
 
+void info(Ant *a)
+{
+    cout << "pos: \t(" << a->at().x << ", " << a->at().y << ")" << endl
+         << "home: \t(" << a->home_pos.x << ", " << a->home_pos.y << ")" << endl
+         << "step: \t" << a->step << endl
+         << "energy: " << a->energy << endl
+         << "alive: \t" << static_cast<bool>(a->is_alive) << endl;
+    a->job->info();
+}
+
 void Worker::work()
 {
     if (is_go_to_find_food && my_food.type == EMPTY)
@@ -148,18 +161,37 @@ MapObj Worker::pick_food()
     return picked_up;
 }
 
+void Worker::put_food(pos_t pos)
+{
+    auto my_map = me->get_map();
+    my_map->merge(pos, my_food);
+    my_food.clean();
+}
+
 void Worker::return_home()
 {
     me->set_step(me->get_step() - 1);
-    if (my_food.value == 0) {
+    if (my_food.value <= 0) {
         // I had eaten the food when I take it back.
-        my_food.type = EMPTY;
+        my_food.clean();
         is_go_to_find_food = true;
     }
     go(me->at(), me->home());
+
+    if (me->at() == me->home()) {
+        put_food(me->home());
+        is_go_to_find_food = true;
+    }
 }
 
 Worker::Worker(Ant *_me = nullptr) : me(_me)
 {
     oriented = pos_t(std_normal() > 0, std_normal() > 0);
+}
+
+void Worker::info()
+{
+    cout << "go \t" << ((is_go_to_find_food) ? "food" : "home") << endl
+         << "my \t" << my_food.type << " " << my_food.value << endl
+         << "oriented (" << oriented.x << ", " << oriented.y << ")\n";
 }

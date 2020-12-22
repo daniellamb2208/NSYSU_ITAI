@@ -1,10 +1,6 @@
 #ifndef __ANT_HPP__
 #define __ANT_HPP__
 
-#include <cstring>
-#include <functional>
-#include <random>
-#include <vector>
 #include "map.hpp"
 using namespace std;
 
@@ -76,6 +72,8 @@ public:
     STATUS get_live_status() { return this->is_alive; }
     void set_live_status(STATUS status) { this->is_alive = status; }
     pos_t &home() { return this->home_pos; }
+
+    friend void info(Ant *a);
 };
 
 class Job
@@ -101,12 +99,13 @@ public:
         eat();
         alive_handler();
     }
+    virtual void info() {}
 };
 
 class Worker : public Job
 {
     bool is_go_to_find_food = true;
-    MapObj my_food = MapObj();
+    MapObj my_food = MapObj(0, EMPTY);
     Ant *me;
     pos_t oriented;
 
@@ -118,6 +117,7 @@ class Worker : public Job
     void clean() final{};
     void find_food();
     MapObj pick_food();
+    void put_food(pos_t pos);
     void return_home();
 
 public:
@@ -130,6 +130,7 @@ public:
     }
     Worker(Ant *_me);
     ~Worker() { clean(); }
+    void info() final;
 };
 
 #endif

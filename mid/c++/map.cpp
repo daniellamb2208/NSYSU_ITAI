@@ -29,32 +29,32 @@ static inline double getRand()
     return bind(dis, gen)();
 }
 
-inline double norm(const pos_t a)
+double norm(const pos_t a)
 {
     return sqrt(a.x * a.x + a.y * a.y);
 }
 
-inline double cos(const pos_t a, const pos_t b)
+double cos(const pos_t a, const pos_t b)
 {
     return dot(a, b) / (norm(a) * norm(b));
 }
 
-inline double dot(const pos_t a, const pos_t b)
+double dot(const pos_t a, const pos_t b)
 {
     return a.x * b.x + a.y * b.y;
 }
 
-inline bool operator<(const pos_t a, const pos_t b)
+bool operator<(const pos_t a, const pos_t b)
 {
     return norm(a) < norm(b);
 }
 
-inline bool operator==(const pos_t a, const pos_t b)
+bool operator==(const pos_t a, const pos_t b)
 {
     return (a.x == b.x) && (a.y == b.y);
 }
 
-inline bool operator!=(const pos_t a, const pos_t b)
+bool operator!=(const pos_t a, const pos_t b)
 {
     return !(a == b);
 }

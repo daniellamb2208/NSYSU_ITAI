@@ -25,14 +25,17 @@ int main()
 {
     LocalMap localMap;
     localMap.foodGenerator();
-    localMap.put_at(pos_t(0, 0), MapObj(1 << 30, HOME));
+    localMap.put_at(pos_t(0, 0), MapObj(0, HOME));
 
     vector<Ant> ant_pool;
     for (int i = 0; i < 1; i++)
         ant_pool.push_back(move(Ant(&localMap, pos_t(0, 0))));
+
     while (!ant_pool.empty()) {
-        for (auto &i : ant_pool)
+        for (auto &i : ant_pool) {
             i.job->do_job();
+            info(&i);
+        }
 
         // Collect dead ant
         for (auto iter = ant_pool.begin(); iter != ant_pool.end();) {
