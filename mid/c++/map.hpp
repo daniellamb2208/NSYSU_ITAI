@@ -7,8 +7,8 @@
 #include <map>
 #include <thread>
 #include <vector>
-#define HEIGHT 10  // test
-#define WIDTH 10
+#define HEIGHT 800  // test
+#define WIDTH 600
 #define DISAPPEAR_THRESHOLD 0.3
 #define MAX_FOOD (HEIGHT * WIDTH)
 
@@ -17,62 +17,27 @@ using namespace std;
 
 enum { EMPTY, FOOD, PHEROMONE, HOME };
 
-typedef struct _p {
-    size_t x;
-    size_t y;
+struct pos_t {
+    size_t x, y;
+    // Constructor
+    pos_t() : x(0), y(0) {}
+    pos_t(size_t _x, size_t _y) : x(_x), y(_y) {}
+    pos_t(double _x, double _y) : x(long(_x)), y(long(_y)) {}
+    pos_t(int _x, int _y) : x(_x), y(_y) {}
+    pos_t(const pos_t &o) = default;
 
-    _p() : x(0), y(0) {}
-    _p(size_t _x, size_t _y) : x(_x), y(_y) {}
-    _p(double _x, double _y) : x(long(_x)), y(long(_y)) {}
-    _p(int _x, int _y) : x(_x), y(_y) {}
-    // Length of distance
-    friend double distance(const struct _p(&a), const struct _p(&b))
-    {
-        return sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
-    }
-    friend double abs(const _p &a) { return sqrt(a.x * a.x + a.y * a.y); }
-    friend double cos(const struct _p(&a), const struct _p(&b))
-    {
-        return (a.x * b.x + a.y * b.y) / (abs(a) * abs(b));
-    }
-    friend double operator*(const struct _p(&a), const struct _p(&b))
-    {
-        return a.x * b.x + a.y * b.y;
-    }
-    friend bool operator<(const struct _p(&a), const struct _p(&b))
-    {
-        return (a.x * a.x) + (a.y * a.y) < (b.x * b.x) + (b.y * b.y);
-    }
-    friend bool operator!=(const struct _p(&a), const struct _p(&b))
-    {
-        return (a.x != b.x && a.y != b.y);
-    }
-    friend bool operator==(const struct _p(&a), const struct _p(&b))
-    {
-        return (a.x == b.x && a.y == b.y);
-    }
-    _p &operator=(const struct _p a)
-    {
-        this->x = a.x;
-        this->y = a.y;
-        return *this;
-    }
-    _p operator+(const struct _p &other)
-    {
-        return _p(this->x + other.x, this->y + other.y);
-    }
-    _p operator-(const struct _p &other)
-    {
-        return _p(this->x - other.x, this->y - other.y);
-    }
-    // Dot product
-    // this: current position
-    // parameter: home
-    double operator*(const struct _p &other)
-    {
-        return this->x * other.x + this->y * other.y;
-    }
-} pos_t;
+    friend double norm(const pos_t a);
+    friend double cos(const pos_t a, const pos_t b);
+    friend double dot(const pos_t a, const pos_t b);
+    friend bool operator<(const pos_t a, const pos_t b);
+    friend bool operator==(const pos_t a, const pos_t b);
+    friend bool operator!=(const pos_t a, const pos_t b);
+
+    pos_t &operator=(const pos_t src);
+    pos_t operator+(const pos_t other);
+    pos_t operator-(const pos_t other);
+    pos_t operator*(const double times);
+};
 
 
 class MapObj
@@ -91,6 +56,7 @@ public:
         double value;
     };
     char type;
+    MapObj operator+(const MapObj other);
 };
 
 class LocalMap
@@ -140,6 +106,5 @@ public:
     array<array<double, WIDTH>, HEIGHT> show(bool mode = 0);
 };
 
-inline double getRand();
 
 #endif

@@ -21,12 +21,99 @@ static vector<double> separateNormally(size_t num, double value)
 }
 
 // Return [0,1) double
-inline double getRand()
+static inline double getRand()
 {
     random_device rd;
     mt19937 gen = mt19937(rd());
     uniform_real_distribution<> dis(0, 1);  // return double
     return bind(dis, gen)();
+}
+
+inline double norm(const pos_t a)
+{
+    return sqrt(a.x * a.x + a.y * a.y);
+}
+
+inline double cos(const pos_t a, const pos_t b)
+{
+    return dot(a, b) / (norm(a) * norm(b));
+}
+
+inline double dot(const pos_t a, const pos_t b)
+{
+    return a.x * b.x + a.y * b.y;
+}
+
+inline bool operator<(const pos_t a, const pos_t b)
+{
+    return norm(a) < norm(b);
+}
+
+inline bool operator==(const pos_t a, const pos_t b)
+{
+    return (a.x == b.x) && (a.y == b.y);
+}
+
+inline bool operator!=(const pos_t a, const pos_t b)
+{
+    return !(a == b);
+}
+
+pos_t &pos_t::operator=(const pos_t src)
+{
+    memcpy(this, &src, sizeof(src));
+}
+
+pos_t pos_t::operator+(const pos_t other)
+{
+    this->x += other.x;
+    this->y += other.y;
+    return *this;
+}
+
+pos_t pos_t::operator-(const pos_t other)
+{
+    this->x -= other.x;
+    this->y -= other.y;
+    return *this;
+}
+
+pos_t pos_t::operator*(const double times)
+{
+    this->x *= times;
+    this->y *= times;
+    return *this;
+}
+
+MapObj MapObj::operator+(const MapObj other)
+{
+    auto _copy_other(other);
+    // Put at home or type is same
+    if (this->type == HOME || _copy_other.type == this->type)
+        _copy_other.value = (this->type + _copy_other.type == HOME + PHEROMONE)
+                                ? 0
+                                : _copy_other.value;
+    else {
+        // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
+        // Bitwise operation, don't touch it if you don't know.
+        switch (this->type | _copy_other.type) {
+        case (FOOD | PHEROMONE):
+            this->value = (this->type & FOOD) * this->value;
+            _copy_other.value = (_copy_other.type & FOOD) * _copy_other.value;
+        case (FOOD):
+            this->type = FOOD;
+            break;
+        case (PHEROMONE):
+            break;  // not Change
+        default:
+            throw runtime_error("TypeError: merge");
+            break;  // Undefined behavior, impossible to execute here
+        }
+    }
+    this->value += _copy_other.value;  // might write negative value in
+    if (this->value < 0)
+        this->clean();
+    return *this;
 }
 
 void LocalMap::sync()
@@ -64,15 +151,6 @@ void LocalMap::sync()
         for (auto &[type, _pos] : toBeDeleted)
             objPool[type].erase(_pos);
 
-        // Show objPool
-        /*
-        for (auto &[type, info] : objPool) {
-            cout << int(type) << ": ";
-            for (auto [pos, obj] : info) {
-                cout << "(" << pos.x << ", " << pos.y << ") " << obj.value
-                     << endl;
-            }
-        }*/
         foodGenerator();
     }
 }
@@ -120,32 +198,7 @@ void LocalMap::merge(pos_t pos, MapObj _source)
 {
     // `me` is a rvalue of MapObj
     auto me = this->get_at(pos);
-    // Put at home or type is same
-    if (me.type == HOME || _source.type == me.type)
-        _source.value =
-            (me.type + _source.type == HOME + PHEROMONE) ? 0 : _source.value;
-    else {
-        // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
-        // Bitwise operation, don't touch it if you don't know.
-        switch (me.type | _source.type) {
-        case (FOOD | PHEROMONE):
-            me.value = (me.type & FOOD) * me.value;
-            _source.value = (_source.type & FOOD) * _source.value;
-        case (FOOD):
-            me.type = FOOD;
-            break;
-        case (PHEROMONE):
-            me.type = PHEROMONE;
-            break;
-        default:
-            throw "TypeError: merge";
-            break;  // Undefined behavior, impossible to execute here
-        }
-    }
-    me.value += _source.value;  // might write negative value in
-    if (me.value < 0)
-        me.clean();
-
+    me = me + _source;
     // Give `put_at` to process the objPool problem
     this->put_at(pos, me);
 }
