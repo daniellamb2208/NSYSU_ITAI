@@ -102,7 +102,7 @@ Ant::Ant(LocalMap *_map, pos_t _my_home)
 
 void info(Ant *a)
 {
-    cout << "pos: \t(" << a->at().x << ", " << a->at().y << ")" << endl
+    cerr << "pos: \t(" << a->at().x << ", " << a->at().y << ")" << endl
          << "home: \t(" << a->home_pos.x << ", " << a->home_pos.y << ")" << endl
          << "step: \t" << a->step << endl
          << "energy: " << a->energy << endl
@@ -191,7 +191,7 @@ Worker::Worker(Ant *_me = nullptr) : me(_me)
 
 void Worker::info()
 {
-    cout << "go \t" << ((is_go_to_find_food) ? "food" : "home") << endl
+    cerr << "go \t" << ((is_go_to_find_food) ? "food" : "home") << endl
          << "my \t" << my_food.type << " " << my_food.value << endl
          << "oriented (" << oriented.x << ", " << oriented.y << ")\n";
 }
