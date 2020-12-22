@@ -1,6 +1,8 @@
 #ifndef __ANT_HPP__
 #define __ANT_HPP__
 
+#include <functional>
+#include <random>
 #include <vector>
 #include "map.hpp"
 using namespace std;
@@ -13,6 +15,14 @@ using namespace std;
 #define MAXENERGY 1500
 #define SLEEP_DURATION 0  // micro_seconds
 #define PHEROMONE_FREQUENCY 1
+
+double std_normal()
+{
+    random_device rd;
+    mt19937_64 gen = mt19937_64(rd());
+    normal_distribution<double> dis(0, 1);  // default [0, 100)
+    return bind(dis, gen)();                // bind and call
+}
 
 /**
  * All the ants are worker.
@@ -88,6 +98,7 @@ class Worker : public Job
     bool is_go_to_find_food = true;
     MapObj my_food = MapObj();
     Ant *me;
+    pos_t oriented;
 
     void work() final;
     void eat() final { me->set_energy(me->get_energy() - get_food()); }
@@ -100,7 +111,10 @@ class Worker : public Job
     void return_home();
 
 public:
-    Worker(Ant *_me = nullptr) : me(_me) {}
+    Worker(Ant *_me = nullptr) : me(_me)
+    {
+        oriented = pos_t(std_normal() > 0, std_normal() > 0);
+    }
 };
 
 #endif

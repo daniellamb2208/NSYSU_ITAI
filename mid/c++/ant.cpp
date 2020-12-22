@@ -26,6 +26,52 @@ static inline void go(pos_t &curr, const pos_t &dest)
         curr.y = WIDTH - 1;
 }
 
+namespace Detail
+{
+void walk(Ant *me, pos_t oriented)
+{
+    auto &curr_pos = me->at();
+    auto my_map = me->get_map();
+
+    auto get_max_obj = [](vector<MapObj> &&v) {
+        auto max_item = v[0];
+        for (auto i : v)
+            if (i.value > max_item.value)
+                max_item = i;
+        return make_pair(pos_t(), max_item);
+    };
+
+    // Scan near by
+    auto find_near = [&]() {
+        auto a = my_map->get_at(pos_t(curr_pos.x + 1, curr_pos.y));
+        auto b = my_map->get_at(pos_t(curr_pos.x + 1, curr_pos.y + 1));
+        auto c = my_map->get_at(pos_t(curr_pos.x, curr_pos.y + 1));
+
+        if (a.type == FOOD)
+            return make_pair(pos_t(curr_pos.x + 1, curr_pos.y), a);
+        else if (b.type == FOOD)
+            return make_pair(pos_t(curr_pos.x + 1, curr_pos.y + 1), b);
+        else if (c.type == FOOD)
+            return make_pair(pos_t(curr_pos.x, curr_pos.y + 1), c);
+        else {
+            return get_max_obj({a, b, c});
+        }
+    };
+
+    //
+    auto [near_where, near_what] = find_near();
+    if (near_what.type == FOOD) {
+        go(curr_pos, near_where);
+    } else if (abs(std_normal()) < 1) {
+        // follow other PHEROMONE
+        go(curr_pos, near_where);
+    } else {
+        go(curr_pos, curr_pos + oriented);
+    }
+}
+
+};  // namespace Detail
+
 static inline bool __alive_handler(Ant *me)
 {
     // Check and set
@@ -76,9 +122,12 @@ void Worker::alive_handler()
 void Worker::find_food()
 {
     me->set_step(me->get_step() - 1);
-    // TODO: go to find food, Use the dot product algorithm
-    // TODO: If found food, set is_go_to_find_food to false
-    
+    auto my_map = me->get_map();
+    auto curr_pos = me->at();
+    if (my_map->get_at(curr_pos).type != FOOD)
+        Detail::walk(me, this->oriented);
+    else  // Next time will run `pick_food()`
+        is_go_to_find_food = false;
 }
 
 MapObj Worker::pick_food()
