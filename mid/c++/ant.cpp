@@ -3,6 +3,15 @@
 using namespace std;
 #define WORKER_APPETITE 1
 
+
+static const inline double std_normal()
+{
+    random_device rd;
+    mt19937_64 gen = mt19937_64(rd());
+    normal_distribution<double> dis(0, 1);  // default [0, 100)
+    return bind(dis, gen)();                // bind and call
+}
+
 // Go to destination for single step
 static inline void go(pos_t &curr, const pos_t &dest)
 {
@@ -148,4 +157,9 @@ void Worker::return_home()
         is_go_to_find_food = true;
     }
     go(me->at(), me->home());
+}
+
+Worker::Worker(Ant *_me = nullptr) : me(_me)
+{
+    oriented = pos_t(std_normal() > 0, std_normal() > 0);
 }

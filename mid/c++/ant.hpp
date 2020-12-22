@@ -1,6 +1,7 @@
 #ifndef __ANT_HPP__
 #define __ANT_HPP__
 
+#include <cstring>
 #include <functional>
 #include <random>
 #include <vector>
@@ -15,14 +16,6 @@ using namespace std;
 #define MAXENERGY 1500
 #define SLEEP_DURATION 0  // micro_seconds
 #define PHEROMONE_FREQUENCY 1
-
-double std_normal()
-{
-    random_device rd;
-    mt19937_64 gen = mt19937_64(rd());
-    normal_distribution<double> dis(0, 1);  // default [0, 100)
-    return bind(dis, gen)();                // bind and call
-}
 
 enum class STATUS : bool {
     DEAD,
@@ -55,9 +48,19 @@ protected:
 
 
 public:
+    unique_ptr<Job> job;
+
     Ant() = delete;
     Ant(LocalMap *_map, pos_t _my_home);
     Ant(const Ant &) = delete;
+    Ant(Ant &&o)
+        : myMap(o.myMap),
+          pos(o.pos),
+          home_pos(o.home_pos),
+          step(o.step),
+          energy(o.energy),
+          is_alive(o.is_alive),
+          job(move(o.job)){};
     Ant &operator=(const Ant &) = delete;
     Ant &operator=(Ant &&) = default;
     ~Ant() = default;
@@ -73,8 +76,6 @@ public:
     STATUS get_live_status() { return this->is_alive; }
     void set_live_status(STATUS status) { this->is_alive = status; }
     pos_t &home() { return this->home_pos; }
-
-    unique_ptr<Job> job;
 };
 
 class Job
@@ -90,7 +91,9 @@ protected:
     virtual void clean() = 0;
 
 public:
-    virtual ~Job();
+    virtual ~Job() {}
+    Job() = default;
+    Job(Job &&j) = default;
     // Each ant will be called by `do_job()`
     void do_job()
     {
@@ -112,16 +115,20 @@ class Worker : public Job
     void put_pheromone(pos_t pos);
     int get_food() final;
     void alive_handler() final;
-    void clean() final;
+    void clean() final{};
     void find_food();
     MapObj pick_food();
     void return_home();
 
 public:
-    Worker(Ant *_me = nullptr) : me(_me)
+    Worker(Worker &&w)
+        : is_go_to_find_food(w.is_go_to_find_food),
+          my_food(w.my_food),
+          me(w.me),
+          oriented(w.oriented)
     {
-        oriented = pos_t(std_normal() > 0, std_normal() > 0);
     }
+    Worker(Ant *_me);
     ~Worker() { clean(); }
 };
 
