@@ -1,10 +1,7 @@
 #include "ant.hpp"
-#include <math.h>
-#include <unistd.h>
-#include <cmath>
-#include <iostream>
-#include <utility>
+#include <memory>
 using namespace std;
+#define WORKER_APPETITE 1
 
 // Go to destination for single step
 static inline void go(pos_t &curr, const pos_t &dest)
@@ -29,386 +26,77 @@ static inline void go(pos_t &curr, const pos_t &dest)
         curr.y = WIDTH - 1;
 }
 
-Ant::~Ant() {}
-
-void Ant::setStep(int _step)
+static inline bool __alive_handler(Ant *me)
 {
-    this->step = _step;
+    // Check and set
+    if (me->get_step() == 0 || me->get_energy() == 0)
+        me->set_live_status(false);
+
+    return me->get_live_status();
 }
 
-const int Ant::getStep()
+Ant::Ant(LocalMap *_map, pos_t _my_home)
 {
-    return this->step;
+    this->job = make_unique<Worker>(this);
+    this->myMap = _map;
+    this->home_pos = _my_home;
 }
 
-void Ant::die()
+void Worker::work()
 {
-    if (this->myObj.value > 0)
-        myMap->merge(this->pos, this->myObj);
-    this->~Ant();
+    if (is_go_to_find_food && my_food.type == EMPTY)
+        find_food();
+    else if (my_food.type == EMPTY)
+        my_food = pick_food();
+    else
+        return_home();
 }
 
-void Ant::sync() {}
-
-void Ant::setMap(LocalMap *_myMap)
+void Worker::put_pheromone(pos_t pos)
 {
-    this->myMap = _myMap;
+    me->get_map()->merge(pos, MapObj(100, PHEROMONE));
 }
 
-pos_t &Ant::at()
+// Be careful! Here is eat the food from my hand
+// Not pick up the food from env.
+int Worker::get_food()
 {
-    return this->pos;
-}
-
-LocalMap *Ant::getMap()
-{
-    return this->myMap;
-}
-MapObj Ant::getObj()
-{
-    return this->myObj;
-}
-
-void Ant::setMyQueen(Queen *_myQueen)
-{
-    this->myQueen = _myQueen;
-}
-
-pos_t Ant::getQueenPos()
-{
-    return this->myQueen->at();
-}
-
-
-// ----------------
-
-BreedAnt::BreedAnt(LocalMap *_myMap, double _appetite)
-{
-    this->appetite = _appetite;
-    this->myMap = _myMap;
-}
-
-BreedAnt::~BreedAnt() {}
-
-void BreedAnt::setAppetite(double _appetite)
-{
-    this->appetite = _appetite;
-}
-
-double BreedAnt::getAppetite()
-{
-    return this->appetite;
-}
-
-void BreedAnt::eat()
-{
-    auto obj = this->myMap->get_at(this->pos);
-    usleep(SLEEP_DURATION);
-    obj.value = -this->appetite;
-    this->myMap->merge(this->pos, obj);
-}
-
-NonBreedAnt::NonBreedAnt(LocalMap *_myMap)
-{
-    myMap = _myMap;
-}
-
-NonBreedAnt::~NonBreedAnt() {}
-
-void NonBreedAnt::take(MapObj obj)
-{
-    // Take constant quantity
-    this->myObj = obj;
-    this->myObj.food = 2;
-    obj.food = -2;
-    this->myMap->merge(this->pos, obj);  // put it back
-}
-
-// ----------------
-
-Queen::Queen(LocalMap *_myMap,
-             pos_t _pos,
-             vector<shared_ptr<Queen>> *_queenPtrPool)
-{
-    myMap = _myMap;
-    pos = _pos;
-    this->queenPtrPool = _queenPtrPool;
-    cout << "hi, I am queen" << endl;
-    this->setAppetite(2);
-    this->slave =
-        make_shared<vector<shared_ptr<Ant>>>(vector<shared_ptr<Ant>>());
-}
-
-Queen::~Queen()
-{
-    auto iter = this->queenPtrPool->begin();
-    while ((iter++)->get() != this)
-        ;
-    this->queenPtrPool->erase(--iter);
-}
-
-int Queen::pregnant()
-{
-    // Number of children
-    int num = int(getRand() * 10 + CHILDREN_BASE);
-    auto setAttr = [this](shared_ptr<Ant> prototype) {
-        prototype->setMap(myMap);
-        prototype->at() = pos;
-        prototype->setStep(MAXSTEP);
-    };
-    for (int i = 0; i < num && (myMap->get_at(pos).value > 0); i++) {
-        this->eat();
-
-        // 2% Virgin, 18% Male, 20% Soldier, 60% Worker
-        auto selectIndex = int(floor(getRand() * 100));
-        if (selectIndex < 0) {  // Virgin
-            shared_ptr<Virgin> prototype = make_shared<Virgin>();
-            setAttr(prototype);
-
-            prototype->setQPP(this->queenPtrPool);
-            prototype->setAppetite(2);
-            auto partial = this->myMap->get_at(this->pos);
-            partial.value /= 20;  // pick up some orig value
-            prototype->myObj = partial;
-            prototype->pos = pos_t(getRand() * HEIGHT, getRand() * WIDTH);
-            prototype->slave =
-                make_shared<vector<shared_ptr<Ant>>>(vector<shared_ptr<Ant>>());
-            prototype->queenPtrPool->push_back(prototype);
-            continue;
-        } else if (selectIndex < 20) {  // Male
-            shared_ptr<Male> prototype = make_shared<Male>();
-            setAttr(prototype);
-            prototype->setAppetite(0.7);
-            prototype->setMyQueen(this);
-            this->slave->push_back(prototype);
-        } else if (selectIndex < 40) {  // Soldier
-            shared_ptr<Soldier> prototype = make_shared<Soldier>();
-            setAttr(prototype);
-            prototype->setMyQueen(this);
-            prototype->setProtectDistance(10);
-            this->slave->push_back(prototype);
-
-        } else {  // Worker
-            shared_ptr<Worker> prototype = make_shared<Worker>();
-            setAttr(prototype);
-            prototype->setMyQueen(this);
-            this->slave->push_back(prototype);
-        }
-        usleep(SLEEP_DURATION);
+    if (my_food.type == FOOD) {
+        my_food.value--;
+        me->set_energy(me->get_energy() + WORKER_APPETITE);
     }
-    return num;
+    return WORKER_APPETITE;
 }
 
-shared_ptr<vector<shared_ptr<Ant>>> &Queen::getSlave()
+void Worker::alive_handler()
 {
-    return this->slave;
+    __alive_handler(me);
 }
 
-// Thoughts: food centrally controlled by Queen ant
-void Queen::job()
+void Worker::find_food()
 {
-    static bool dbg = true;
-    if (this->myMap->get_at(this->pos).food > 0) {
-        this->eat();
-        if (findMale() && dbg) {
-            // dbg = false;
-            pregnant();
-        } else {  // If not found Male, go sleep and make a `Male`
-            usleep(SLEEP_DURATION);
-            shared_ptr<Male> prototype = make_shared<Male>();
-            prototype->setMap(myMap);
-            prototype->at() = pos;
-            prototype->setStep(MAXSTEP);
-            prototype->setMyQueen(this);
-            prototype->setAppetite(0.7);
-            this->slave->push_back(prototype);
-        }
-    } else {
-        cout << "Die" << endl;
-        this->die();
+    me->set_step(me->get_step() - 1);
+    // TODO: go to find food, Use the dot product algorithm
+    // TODO: If found food, set is_go_to_find_food to false
+    
+}
+
+MapObj Worker::pick_food()
+{
+    auto my_map = me->get_map();
+    // FIXME: have race condition here
+    MapObj picked_up = my_map->get_at(me->at());
+    my_map->merge(me->at(), MapObj(-picked_up.value, FOOD));
+    return picked_up;
+}
+
+void Worker::return_home()
+{
+    me->set_step(me->get_step() - 1);
+    if (my_food.value == 0) {
+        // I had eaten the food when I take it back.
+        my_food.type = EMPTY;
+        is_go_to_find_food = true;
     }
-}
-
-inline const bool Queen::findMale()
-{
-    // Sensor if any Male ant on itself(position overlap)
-    // if sensored, mate with it, and Male ant will die
-
-
-    vector<shared_ptr<Ant>>::iterator toBeDeleted = this->slave->end();
-    for (auto iter = this->slave->begin(); iter != this->slave->end(); iter++) {
-        if (dynamic_cast<Male *>(iter->get()) != nullptr &&
-            iter->get()->at() == this->pos) {
-            // erase it will be destructed automatically
-            toBeDeleted = iter;
-            break;
-        }
-    }
-
-    if (toBeDeleted != this->slave->end()) {
-        this->slave->erase(toBeDeleted);
-        return true;
-    }
-
-
-
-    return false;
-}
-
-void Queen::setQPP(vector<shared_ptr<Queen>> *_queenPtrPool)
-{
-    this->queenPtrPool = _queenPtrPool;
-}
-
-Male::Male(LocalMap *_myMap)
-{
-    myMap = _myMap;
-}
-
-Male::~Male() {}
-
-void Male::setAppetite(double _appetite)
-{
-    this->appetite = _appetite;
-}
-
-void Male::job()
-{
-    if (this->step--) {
-        // Hanging around Queen ant
-        auto origPos = getQueenPos();
-        auto entropy = getRand() * 3;
-        if (distance(this->pos, origPos) < entropy) {
-            // Too close, leave more
-            pos_t target(getRand() * HEIGHT, getRand() * WIDTH);
-            go(this->pos, target);
-            eat();
-        } else
-            go(this->pos, origPos);  // closer
-    } else
-        this->die();
-}
-
-Virgin::Virgin(LocalMap *_myMap)
-{
-    myMap = _myMap;
-    this->myMap->merge(this->pos, this->myObj);
-}
-
-Virgin::~Virgin() {}
-
-Soldier::Soldier(LocalMap *_myMap)
-{
-    myMap = _myMap;
-}
-
-Soldier::~Soldier() {}
-
-void Soldier::job()
-{
-    if (this->step--) {
-        // Stay around with Queen
-        pos_t queenPos = getQueenPos();
-        pos_t entropy(int(getRand() * 2), int(getRand() * 2));
-        // Move around ```target``` pos
-        pos_t target = queenPos + entropy;
-
-        for (int i = 0; i < 5; i++) {
-            go(this->pos, target);
-            usleep(SLEEP_DURATION);
-        }
-    } else {
-        this->die();
-    }
-}
-
-void Soldier::setProtectDistance(double pd)
-{
-    this->portectDistance = pd;
-}
-
-Worker::Worker(LocalMap *_myMap)
-{
-    this->myMap = _myMap;
-    wandering();
-}
-
-Worker::~Worker() {}
-
-// Make `Worker` forget it's orig pos
-void Worker::wandering()
-{
-    // Random move a short path,
-    int vertical = ceil(getRand() * STEP) * (getRand() > 0.5 ? 1 : -1);
-    int horizent = ceil(getRand() * STEP) * (getRand() > 0.5 ? 1 : -1);
-
-    pos_t wandering(vertical, horizent);
-    while (pos != wandering && step--)
-        go(pos, wandering);
-}
-
-void Worker::job()
-{
-    // cout << this << ": " << this->pos.x << " " << this->pos.y << endl;
-    if (this->step--) {
-        // To-go vector
-        pos_t target;
-        // Normal vector
-        pos_t direction = this->pos - this->myQueen->getPos();
-        //  (to-go DOT normal) >= 0 means never go back
-        //  Try to calculate inner prodcut of target and direction
-        //  Condition charged by last line in the while loop to check
-        //  if it will go back, follow normal vector to move a step
-
-        if (this->myObj.type == EMPTY) {
-            auto closestFood = this->myMap->findClosest(this->pos, FOOD);
-            auto closestPhermone =
-                this->myMap->findClosest(this->pos, PHEROMONE);
-
-            if (closestPhermone ==
-                pos_t(-1, -1))  // Not found pheromone, go closest food
-                target = closestFood;
-            else {
-                auto phermone = this->myMap->get_at(closestPhermone);
-                pos_t weightedPhermone(
-                    closestPhermone.x * log10(phermone.value) / 10,
-                    closestPhermone.y * log10(phermone.value) / 10);
-                target = closestFood + weightedPhermone;
-            }
-            // Is arrived food, pick up to myObj
-            if (this->pos == closestFood && this->myObj.type != HOME) {
-                this->take(this->myMap->get_at(pos));
-            }
-
-            // Responsible for ensuring not go back
-            // if dot operator result < 0, means go back
-            // target = direction means to forward a step to far away from home
-            // a ． b = |a||b|cos(theta)
-            // cos(theta) = a ． b / (|a||b|)
-            if (cos(direction, target) < 0)
-                target = direction;
-        }
-
-        if (this->myObj.type == FOOD) {  // Go home
-            target = this->myQueen->at();
-            // Every time period put PHEROMONE
-            //            if (!(this->step % PHEROMONE_FREQUENCY))
-            putPheromone();
-            if (this->pos == target) {
-                this->myMap->merge(this->pos, this->myObj);
-                this->myObj.clean();
-            }
-        }
-        go(this->pos, target);
-    } else {
-        this->die();
-    }
-    usleep(SLEEP_DURATION);
-}
-
-void Worker::putPheromone()
-{
-    // log_{1.1}^100 = 42
-    // After 42 SLEEP_DURATION will disappear
-    myMap->merge(pos, MapObj(100, PHEROMONE));
+    go(me->at(), me->home());
 }

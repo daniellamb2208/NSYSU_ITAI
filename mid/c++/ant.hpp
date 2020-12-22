@@ -6,175 +6,101 @@
 using namespace std;
 
 // Parameters are modifiable
-// Changing to observe the ant behaviour 
+// Changing to observe the ant behaviour
 #define STEP 1
 #define CHILDREN_BASE 30
 #define MAXSTEP 1500
+#define MAXENERGY 1500
 #define SLEEP_DURATION 0  // micro_seconds
 #define PHEROMONE_FREQUENCY 1
 
 /**
- * Inheritance Graph:
- *                   -----------
- *                  |    Ant    |
- *                   -----------
- *                   /         \
- *                  /           \
- *                 /             \
- *            -----------         -----------
- *           |   Breed   |       | Non-breed |
- *            -----------         -----------
- *            /        \            /      \
- *        ------    -------      -------    ------
- *       | Male |  | Queen |    |Soldier|  |Worker|
- *        ------    -------      -------    -------
- *                     |
- *                  --------
- *                 | Virgin |
- *                  --------
+ * All the ants are worker.
  *
  */
-
-// TODO: Use `Queen` to control all slave ant
-
-// Declare
-class Queen;
-class Male;
-class Virgin;
-class Soldier;
-class Worker;
+class Job;
 
 class Ant
 {
-protected:
-    LocalMap *myMap;
+private:
+    LocalMap *myMap = nullptr;
     // My position
     // Every steps should udpate this pos
-    pos_t pos;
+    pos_t pos = pos_t();
+    pos_t home_pos = pos_t();
     // Descent form threshold(MAXSTEP), will die if count to zero.
-    int step;
-    // An object on the ant.
-    MapObj myObj;
-    Queen *myQueen;
+    int step = MAXSTEP;
+    // Descenting energy, can be increased by eat food, but will die if
+    // count to zero.
+    int energy = MAXENERGY;
+    bool is_alive = true;
+
+protected:
+    friend class Job;  // Make Job could access *this directly
+    unique_ptr<Job> job = nullptr;
 
 public:
-    Ant() = default;
-    ~Ant();
-    pos_t &at();
-    void setStep(int _step);
-    const int getStep();
-    // Call distructor
-    void die();
-    void sync();
-    void setMap(LocalMap *_myMap);
-    LocalMap *getMap();
-    MapObj getObj();
-    void setMyQueen(Queen *_myQueen);
-    pos_t getQueenPos();
-    virtual void job() = 0;
+    Ant() = delete;
+    Ant(LocalMap *_map, pos_t _my_home);
+    // Ant(int job_code);  // set job by number,
+    // Ant(Job *_job = nullptr) : job(_job) {}
+    ~Ant() = default;
+    pos_t &at() { return this->pos; }
+    void set_step(int _step) { this->step = _step; }
+    const int get_step() const { return this->step; }
+    void set_job(unique_ptr<Job> &&_job) { this->job = move(_job); }
+    void set_map(LocalMap *_myMap) { this->myMap = _myMap; }
+    LocalMap *get_map() { return this->myMap; }
+    int get_energy() const { return this->energy; }
+    void set_energy(int _value) { this->energy = _value; }
+    bool get_live_status() { return this->is_alive; }
+    void set_live_status(bool status) { this->is_alive = status; }
+    pos_t &home() { return this->home_pos; }
+
+    Ant &operator=(Ant &&) = default;
 };
 
-// ----------------
-
-class BreedAnt : public Ant
+class Job
 {
 protected:
-    // Who has fertility, eat food
-    double appetite;
+    // Including walk, job, management
+    virtual void work() = 0;
+    // Eat the food which it get
+    virtual void eat() = 0;
+    virtual int get_food() = 0;
+    // Set live status in each work being done
+    virtual void alive_handler() = 0;
+    virtual void clean() = 0;
 
 public:
-    BreedAnt() = default;
-    BreedAnt(LocalMap *_myMap, double _appetite = 2);
-    ~BreedAnt();
-    void setAppetite(double);
-    double getAppetite();
-    void eat();
+    ~Job() { clean(); }
+    // Each ant will be called by `do_job()`
+    void do_job()
+    {
+        work();
+        eat();
+        alive_handler();
+    }
 };
 
-class NonBreedAnt : public Ant
+class Worker : public Job
 {
-public:
-    NonBreedAnt() = default;
-    NonBreedAnt(LocalMap *_myMap);
-    ~NonBreedAnt();
-    // Take current pos for some food
-    void take(MapObj obj);
-};
+    bool is_go_to_find_food = true;
+    MapObj my_food = MapObj();
+    Ant *me;
 
-// ----------------
-
-class Queen : public BreedAnt
-{
-protected:
-    // FIXME: Bug here
-    shared_ptr<vector<shared_ptr<Ant>>> slave;
-    vector<shared_ptr<Queen>> *queenPtrPool;
+    void work() final;
+    void eat() final { me->set_energy(me->get_energy() - get_food()); }
+    void put_pheromone(pos_t pos);
+    int get_food() final;
+    void alive_handler() final;
+    void clean() final;
+    void find_food();
+    MapObj pick_food();
+    void return_home();
 
 public:
-    Queen() = default;
-    Queen(LocalMap *_myMap,
-          pos_t _pos,
-          vector<shared_ptr<Queen>> *queenPtrPool);
-    ~Queen();
-    // Consume some food then sleep
-    int pregnant();
-    // Loop eat, mate and pregnant
-    void job();
-    // find Male ant, in order to mate
-    const bool findMale();
-    void setQPP(vector<shared_ptr<Queen>> *_queenPtrPool);
-    shared_ptr<vector<shared_ptr<Ant>>> &getSlave();
-    pos_t getPos() { return this->pos; }
-};
-
-class Male : public BreedAnt
-{
-public:
-    Male() = default;
-    Male(LocalMap *_myMap);
-    ~Male();
-    void setAppetite(double _appetite);
-    // Mate with queen or eat food
-    void job();
-    // If mated once, die
-};
-
-class Virgin : public Queen
-{
-public:
-    Virgin() = default;
-    Virgin(LocalMap *_myMap);
-    ~Virgin();
-    // Move some resource to create a new empire
-};
-
-class Soldier : public NonBreedAnt
-{
-    double portectDistance;
-
-public:
-    Soldier() = default;
-    Soldier(LocalMap *_myMap);
-    ~Soldier();
-    void setProtectDistance(double pd);
-    void job();
-    // TODO: Protect queen
-};
-
-class Worker : public NonBreedAnt
-{
-public:
-    Worker() = default;
-    Worker(LocalMap *_myMap);
-    ~Worker();
-    void wandering();
-    void putPheromone();
-    void job();
-
-private:
-    // Once take food, record is there still remaining food
-    // If remaining, give value true, and vice versa
-    bool remaining;
+    Worker(Ant *_me = nullptr) : me(_me) {}
 };
 
 #endif
