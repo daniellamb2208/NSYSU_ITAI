@@ -4,7 +4,7 @@
 int main()
 {
     LocalMap l;
-    l.put_at(_p(), MapObj(255));
+    l.put_at(pos_t(), MapObj(255));
     auto arr = l.show(1);
     for (auto i : arr) {
         for (auto j : i)

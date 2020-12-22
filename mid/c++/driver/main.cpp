@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include <iostream>
-#include "ant.hpp"
-#include "map.hpp"
+#include "../ant.hpp"
+#include "../map.hpp"
 using namespace std;
 
 void printMap(LocalMap *localMap, int p)

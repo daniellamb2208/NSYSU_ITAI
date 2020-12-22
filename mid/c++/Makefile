@@ -8,7 +8,7 @@ all: clean dep
 dep:
 	$(CC) $(CPPFLAG) -c map.cpp
 	$(CC) $(CPPFLAG) -c ant.cpp
-	$(CC) $(CPPFLAG) -c main.cpp
+	$(CC) $(CPPFLAG) -c driver/main.cpp
 
 plot:
 	for x in *.elf ; do ( ./$$x &); done
