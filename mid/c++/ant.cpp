@@ -18,19 +18,16 @@ static const inline double std_normal()
 // Go to destination for single step
 static inline void go(pos_t &curr, const pos_t &dest)
 {
-    long int x_diff = dest.x - curr.x;
-    long int y_diff = dest.y - curr.y;
+    auto diff = dest - curr;
     // +1 prevent 0/0
-    curr.x +=
-        (abs(x_diff) > abs(y_diff)) ? ((x_diff | 1) / abs(x_diff | 1)) : 0;
-    curr.y +=
-        (abs(x_diff) <= abs(y_diff)) ? ((y_diff | 1) / abs(y_diff | 1)) : 0;
+    curr.x += (diff.x > diff.y) ? ((diff.x | 1) / (diff.x | 1)) : 0;
+    curr.y += (diff.x <= diff.y) ? ((diff.y | 1) / (diff.y | 1)) : 0;
 
     // Overflow condition, move one step, so if overflow is occurred
     // previous position most be 0
-    if (curr.x & (1 << 31))
+    if (curr.x & (1 << 32))
         curr.x = 0;
-    if (curr.y & (1 << 31))
+    if (curr.y & (1 << 32))
         curr.y = 0;
     if (curr.x >= HEIGHT)
         curr.x = HEIGHT - 1;
@@ -38,7 +35,7 @@ static inline void go(pos_t &curr, const pos_t &dest)
         curr.y = WIDTH - 1;
 }
 
-namespace Detail
+namespace detail
 {
 void walk(Ant *me, pos_t oriented)
 {
@@ -65,9 +62,8 @@ void walk(Ant *me, pos_t oriented)
             return make_pair(pos_t(curr_pos.x + 1, curr_pos.y + 1), b);
         else if (c.type == FOOD)
             return make_pair(pos_t(curr_pos.x, curr_pos.y + 1), c);
-        else {
+        else
             return get_max_obj({a, b, c});
-        }
     };
 
     //
@@ -82,7 +78,7 @@ void walk(Ant *me, pos_t oriented)
     }
 }
 
-};  // namespace Detail
+};  // namespace detail
 
 static inline STATUS __alive_handler(Ant *me)
 {
@@ -98,6 +94,51 @@ Ant::Ant(LocalMap *_map, pos_t _my_home)
     this->job = make_unique<Worker>(this);
     this->myMap = _map;
     this->home_pos = _my_home;
+}
+
+pos_t &Ant::at()
+{
+    return this->pos;
+}
+void Ant::set_step(int _step)
+{
+    this->step = _step;
+}
+const int Ant::get_step() const
+{
+    return this->step;
+}
+void Ant::set_job(unique_ptr<Job> &&_job)
+{
+    this->job = move(_job);
+}
+void Ant::set_map(LocalMap *_myMap)
+{
+    this->myMap = _myMap;
+}
+LocalMap *Ant::get_map() const
+{
+    return this->myMap;
+}
+int Ant::get_energy() const
+{
+    return this->energy;
+}
+void Ant::set_energy(int _value)
+{
+    this->energy = _value;
+}
+STATUS Ant::get_live_status() const
+{
+    return this->is_alive;
+}
+void Ant::set_live_status(STATUS status)
+{
+    this->is_alive = status;
+}
+pos_t &Ant::home()
+{
+    return this->home_pos;
 }
 
 void info(Ant *a)
@@ -138,7 +179,7 @@ int Worker::get_food()
 
 void Worker::alive_handler()
 {
-    __alive_handler(me);
+    me->set_live_status(__alive_handler(me));
 }
 
 void Worker::find_food()
@@ -147,7 +188,7 @@ void Worker::find_food()
     auto my_map = me->get_map();
     auto curr_pos = me->at();
     if (my_map->get_at(curr_pos).type != FOOD)
-        Detail::walk(me, this->oriented);
+        detail::walk(me, this->oriented);
     else  // Next time will run `pick_food()`
         is_go_to_find_food = false;
 }
