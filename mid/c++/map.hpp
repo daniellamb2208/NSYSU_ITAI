@@ -35,7 +35,9 @@ struct pos_t {
 
     pos_t &operator=(const pos_t src);
     pos_t operator+(const pos_t other);
+    pos_t operator+(const pos_t other) const;
     pos_t operator-(const pos_t other);
+    pos_t operator-(const pos_t other) const;
     pos_t operator*(const double times);
 };
 
@@ -44,7 +46,7 @@ class MapObj
 {
 public:
     MapObj() noexcept : value(0), type(EMPTY) {}
-    MapObj(double _value, char _type = FOOD) : value(_value), type(_type) {}
+    MapObj(double _value, char _type);
     void clean()
     {
         this->type = EMPTY;
@@ -56,7 +58,7 @@ public:
         double value;
     };
     char type;
-    MapObj operator+(const MapObj other);
+    MapObj operator+(MapObj other);
     MapObj &operator=(const MapObj &_source) = default;
 };
 
@@ -71,7 +73,8 @@ private:
     void sync();
 
 public:
-    LocalMap();
+    LocalMap() = delete;
+    LocalMap(bool disable_sync);
     ~LocalMap();
 
     // Get the obj
@@ -90,10 +93,8 @@ public:
     // Default call this function
     void food_gen();
 
-    // `mode` 0: Array of types of obj,
-    //      you should cast the type to char by yourself
-    // `mode` 1: Array of value of obj
-    array<array<double, WIDTH>, HEIGHT> show(bool mode = 0);
+    // Return 2D array of pair<double, char>, first is value, second is type
+    array<array<pair<double, char>, WIDTH>, HEIGHT> show();
 };
 
 

@@ -72,6 +72,11 @@ pos_t pos_t::operator+(const pos_t other)
     return *this;
 }
 
+pos_t pos_t::operator+(const pos_t other) const
+{
+    return pos_t(x + other.x, y + other.y);
+}
+
 pos_t pos_t::operator-(const pos_t other)
 {
     this->x -= other.x;
@@ -79,28 +84,35 @@ pos_t pos_t::operator-(const pos_t other)
     return *this;
 }
 
-pos_t pos_t::operator*(const double times)
+pos_t pos_t::operator-(const pos_t other) const
+{
+    return pos_t(x - other.x, y - other.y);
+}
+
+pos_t pos_t::operator*(double times)
 {
     this->x *= times;
     this->y *= times;
     return *this;
 }
 
-MapObj MapObj::operator+(const MapObj other)
+MapObj::MapObj(double _value, char _type) : value(_value), type(_type) {}
+
+MapObj MapObj::operator+(MapObj other)
 {
-    auto _copy_other(other);
     // Put at home or type is same
-    if (this->type == HOME || _copy_other.type == this->type)
-        _copy_other.value = (this->type + _copy_other.type == HOME + PHEROMONE)
-                                ? 0
-                                : _copy_other.value;
+    if (this->type == EMPTY) {
+        this->type = other.type;
+    } else if (this->type == HOME || other.type == this->type)
+        other.value =
+            (this->type + other.type == HOME + PHEROMONE) ? 0 : other.value;
     else {
         // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
         // Bitwise operation, don't touch it if you don't know.
-        switch (this->type | _copy_other.type) {
+        switch (this->type | other.type) {
         case (FOOD | PHEROMONE):
             this->value = (this->type & FOOD) * this->value;
-            _copy_other.value = (_copy_other.type & FOOD) * _copy_other.value;
+            other.value = (other.type & FOOD) * other.value;
         case (FOOD):
             this->type = FOOD;
             break;
@@ -111,7 +123,7 @@ MapObj MapObj::operator+(const MapObj other)
             break;  // Undefined behavior, impossible to be executed here
         }
     }
-    this->value += _copy_other.value;  // might write negative value in
+    this->value += other.value;  // might write negative value in
     if (this->value < 0)
         this->clean();
     return *this;
@@ -147,21 +159,21 @@ void LocalMap::sync()
     }
 }
 
-LocalMap::LocalMap()
+LocalMap::LocalMap(bool disable_sync = false) : tot_foods(0)
 {
     // Initialize arr
     for (size_t i = 0; i < HEIGHT; i++)
         for (size_t j = 0; j < WIDTH; j++)
             arr.at(i).at(j) = MapObj();
 
-    // Use wrapper function
-    this->t = thread(bind(&LocalMap::sync, this));
-    this->tot_foods = 0;
+    if (!disable_sync)
+        this->t = thread(bind(&LocalMap::sync, this));
 }
 
 LocalMap::~LocalMap()
 {
-    this->t.join();
+    if (t.joinable())
+        this->t.join();
 }
 
 MapObj LocalMap::get_at(pos_t pos)
@@ -209,18 +221,17 @@ void LocalMap::food_gen(size_t num, double value)
     // TODO: Parallelize it!
     for (auto i : values) {
         pos_t pos(size_t(__get_rand() * HEIGHT), size_t(__get_rand() * WIDTH));
-        this->merge(pos, MapObj(i));
+        this->merge(pos, MapObj(i, FOOD));
     }
 }
 
-array<array<double, WIDTH>, HEIGHT> LocalMap::show(bool mode)
+array<array<pair<double, char>, WIDTH>, HEIGHT> LocalMap::show()
 {
-    array<array<double, WIDTH>, HEIGHT> canvax;
+    array<array<pair<double, char>, WIDTH>, HEIGHT> canvax;
     for (size_t i = 0; i < HEIGHT; i++)
         for (size_t j = 0; j < WIDTH; j++) {
             auto obj = get_at(pos_t(i, j));
-            canvax.at(i).at(j) =
-                (double("0FPH"[int(obj.type)] * (!mode))) + (obj.value * mode);
+            canvax.at(i).at(j) = make_pair(obj.value, obj.type);
         }
     // Return 2-dimension array of double
     // You should cast the type to char by yourself(if you want type)
