@@ -2,28 +2,32 @@
 #include <iostream>
 #include "../ant.hpp"
 #include "../map.hpp"
+#include "color.hpp"
 using namespace std;
 
-void printMap(LocalMap *localMap, int p)
+void print_map(auto map)
 {
-    auto cast = [](int _p, double value) {
-        if (_p)
-            cout << (value) << " ";
-        else
-            cout << char(value) << " ";
+    auto color_mux = [](char type) {
+        if (type == FOOD)
+            cout << Color::blue;
+        else if (type == PHEROMONE)
+            cout << Color::green;
+        else if (type == HOME)
+            cout << Color::yellow;
     };
-    auto m = localMap->show(p);
-    for (size_t i = 0; i < HEIGHT; i++) {
-        for (size_t j = 0; j < WIDTH; j++)
-            cast(p, m[i][j]);
-        cout << endl;
+    for (auto i : map) {
+        for (auto j : i) {
+            color_mux(j.second);
+            std::cout << (j.first) << Color::default_c << " ";
+        }
+        std::cout << std::endl;
     }
-    cout << endl;
+    std::cout << std::endl;
 }
 
 int main()
 {
-    LocalMap localMap;
+    LocalMap localMap(false);
     localMap.food_gen();
     localMap.put_at(pos_t(0, 0), MapObj(0, HOME));
 
@@ -44,8 +48,7 @@ int main()
             else
                 iter++;
         }
-        printMap(&localMap, 1);
-        printMap(&localMap, 0);
+        print_map(localMap.show());
         sleep(1);
     }
 
