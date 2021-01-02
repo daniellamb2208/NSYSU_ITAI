@@ -105,30 +105,27 @@ MapObj::MapObj(double _value, char _type) : value(_value), type(_type) {}
 
 MapObj MapObj::operator+(MapObj other)
 {
-    // Put at home or type is same
-    if (this->type == EMPTY) {
-        this->type = other.type;
-    } else if (this->type == HOME || other.type == this->type)
-        other.value =
-            (this->type + other.type == HOME + PHEROMONE) ? 0 : other.value;
-    else {
-        // FOOD + PHEROMONE = FOOD, all the PHEROMONE will lost
-        // Bitwise operation, don't touch it if you don't know.
-        switch (this->type | other.type) {
-        case (FOOD | PHEROMONE):
-            this->value = (this->type & FOOD) * this->value;
-            other.value = (other.type & FOOD) * other.value;
-        case (FOOD):
-            this->type = FOOD;
-            break;
-        case (PHEROMONE):
-            break;  // not Change
-        default:
-            throw runtime_error("TypeError: merge");
-            break;  // Undefined behavior, impossible to be executed here
-        }
+    auto ffs = __builtin_ffs(this->type | other.type);
+    auto merge_type = 1 << (ffs - 1);
+
+    auto partner_ptr = (merge_type == other.type) ? this : (&other);
+    auto pivot_ptr = (partner_ptr == this) ? (&other) : this;
+    switch (merge_type) {
+    case HOME:
+    case FOOD:
+        this->value = pivot_ptr->value + (((partner_ptr->type == FOOD) ||
+                                           (partner_ptr->type == HOME))
+                                              ? partner_ptr->value
+                                              : 0);
+        break;
+    case PHEROMONE:
+        this->value = pivot_ptr->value + partner_ptr->value;
+        break;
+    case EMPTY:
+    default:
+        break;
     }
-    this->value += other.value;  // might write negative value in
+    this->type = merge_type;
     if (this->value < 0)
         this->clean();
     return *this;

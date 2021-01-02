@@ -27,28 +27,38 @@ void print_map(auto map)
 int main()
 {
     LocalMap l(true);
-    l.put_at(pos_t(), MapObj(255, HOME));
-    l.merge(pos_t(1, 2), MapObj(10, FOOD));
-    l.merge(pos_t(1, 3), MapObj(255, PHEROMONE));
+    // EMPTY + HOME = HOME
+    l.merge(pos_t(), MapObj(10, HOME));
+    // EMPTY + FOOD = FOOD
+    l.merge(pos_t(1, 2), MapObj(20, FOOD));
+    // EMPTY + PHEROMONE = PHEROMONE
+    l.merge(pos_t(1, 3), MapObj(40, PHEROMONE));
+    // EMPTY + EMPTY = EMPTY
     l.merge(pos_t(1, 4), MapObj(0, EMPTY));
     print_map(l.show());
 
-    // Put PHEROMONE on FOOD is FOOD
-    l.merge(pos_t(1, 4), MapObj(40, FOOD));
-    l.merge(pos_t(1, 4), MapObj(10, PHEROMONE));
+
+
+    // FOOD + PHEROMONE = FOOD
+    l.merge(pos_t(1, 4), MapObj(20, FOOD));
+    l.merge(pos_t(1, 4), MapObj(40, PHEROMONE));
     print_map(l.show());
 
-    // Put FOOD on PHEROMONE is FOOD
+    // PHEROMONE + FOOD = FOOD
     l.merge(pos_t(1, 5), MapObj(40, PHEROMONE));
-    l.merge(pos_t(1, 5), MapObj(10, FOOD));
+    l.merge(pos_t(1, 5), MapObj(20, FOOD));
     print_map(l.show());
 
-    // Put FOOD on HOME is HOME
-    l.merge(pos_t(), MapObj(10, FOOD));
+    // FOOD + HOME = HOME
+    l.merge(pos_t(), MapObj(20, FOOD));
     print_map(l.show());
 
-    // Put PHEROMONE on HOME is HOME
+    // PHEROMONE + HOME = no change
     l.merge(pos_t(), MapObj(40, PHEROMONE));
+    print_map(l.show());
+
+    // FOOD + HOME = HOME
+    l.merge(pos_t(1, 5), MapObj(10, HOME));
     print_map(l.show());
 
     return 0;

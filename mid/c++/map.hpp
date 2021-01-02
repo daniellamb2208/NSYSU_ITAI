@@ -15,7 +15,7 @@
 const double DISCOUNT_LAMBDA = 1.1;
 using namespace std;
 
-enum { EMPTY, FOOD, PHEROMONE, HOME };
+enum { EMPTY = 8, PHEROMONE = 4, FOOD = 2, HOME = 1 };
 
 struct pos_t {
     int x, y;
