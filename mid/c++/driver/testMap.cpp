@@ -33,10 +33,22 @@ int main()
     l.merge(pos_t(1, 4), MapObj(0, EMPTY));
     print_map(l.show());
 
-    // Put at same place
+    // Put PHEROMONE on FOOD is FOOD
     l.merge(pos_t(1, 4), MapObj(40, FOOD));
     l.merge(pos_t(1, 4), MapObj(10, PHEROMONE));
+    print_map(l.show());
 
+    // Put FOOD on PHEROMONE is FOOD
+    l.merge(pos_t(1, 5), MapObj(40, PHEROMONE));
+    l.merge(pos_t(1, 5), MapObj(10, FOOD));
+    print_map(l.show());
+
+    // Put FOOD on HOME is HOME
+    l.merge(pos_t(), MapObj(10, FOOD));
+    print_map(l.show());
+
+    // Put PHEROMONE on HOME is HOME
+    l.merge(pos_t(), MapObj(40, PHEROMONE));
     print_map(l.show());
 
     return 0;
