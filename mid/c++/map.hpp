@@ -39,6 +39,7 @@ struct pos_t {
     pos_t operator-(const pos_t other);
     pos_t operator-(const pos_t other) const;
     pos_t operator*(const double times);
+    friend ostream &operator<<(ostream &_out, const pos_t pos);
 };
 
 

@@ -95,6 +95,11 @@ pos_t pos_t::operator*(double times)
     this->y *= times;
     return *this;
 }
+ostream &operator<<(ostream &_out, const pos_t pos)
+{
+    _out << "(" << pos.x << ", " << pos.y << ") ";
+    return _out;
+}
 
 MapObj::MapObj(double _value, char _type) : value(_value), type(_type) {}
 
@@ -133,7 +138,7 @@ void LocalMap::sync()
 {
     auto proc_unit = [&](MapObj obj, auto &jter) {
         auto preValue = obj.value;
-        if (obj.value < 0.03)
+        if (obj.value < 0.03 && obj.type != HOME)
             obj.clean();
 
         // PHEROMONE will dissipate
@@ -178,7 +183,18 @@ LocalMap::~LocalMap()
 
 MapObj LocalMap::get_at(pos_t pos)
 {
-    return (this->arr.at(pos.x).at(pos.y)).load();
+    bool failed = true;
+    MapObj obj;
+    do {
+        try {
+            obj = this->arr.at(pos.x).at(pos.y).load();
+            failed = false;
+        } catch (const std::exception &e) {
+            cerr << e.what() << endl;
+            failed = true;
+        }
+    } while (failed);
+    return obj;
 }
 
 void LocalMap::put_at(pos_t pos, MapObj obj)

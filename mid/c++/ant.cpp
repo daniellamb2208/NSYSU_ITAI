@@ -18,24 +18,23 @@ static const inline double std_normal()
 // Go to destination for single step
 static inline void go(pos_t &curr, const pos_t &dest)
 {
-    cout<<"AAA"<< &curr<<endl;
     auto diff = dest - curr;
     // +1 prevent 0/0
-    cout<<"CCC"<<curr.x<<"," <<curr.y<<endl;
-    curr.x += (abs(diff.x) > abs(diff.y)) ? ((diff.x | 1) / (abs(diff.x | 1))) : 0;
-    curr.y += (abs(diff.x) <= abs(diff.y)) ? ((diff.y | 1) / (abs(diff.y | 1))) : 0;
+    curr.x +=
+        (abs(diff.x) > abs(diff.y)) ? ((diff.x | 1) / (abs(diff.x | 1))) : 0;
+    curr.y +=
+        (abs(diff.x) <= abs(diff.y)) ? ((diff.y | 1) / (abs(diff.y | 1))) : 0;
 
     // Overflow condition, move one step, so if overflow is occurred
     // previous position most be 0
     if (curr.x == -1)
-        curr.x = 0;
-    if (curr.y == -1)
-        curr.y = 0;
-    if (curr.x >= HEIGHT)
         curr.x = HEIGHT - 1;
-    if (curr.y >= WIDTH)
+    if (curr.y == -1)
         curr.y = WIDTH - 1;
-    cout<<"CCC"<<curr.x<<"," <<curr.y<<endl;
+    if (curr.x >= HEIGHT)
+        curr.x = 0;
+    if (curr.y >= WIDTH)
+        curr.y = 0;
 }
 
 namespace detail
@@ -43,7 +42,6 @@ namespace detail
 void walk(Ant *me, pos_t oriented)
 {
     auto &curr_pos = me->at();
-    cout<<"BBB"<<&me->at()<<endl;
     auto my_map = me->get_map();
 
     auto get_max_obj = [](vector<MapObj> &&v) {
@@ -74,18 +72,18 @@ void walk(Ant *me, pos_t oriented)
     auto [near_where, near_what] = find_near();
     if (near_what.type == FOOD) {
         go(curr_pos, near_where);
-        cout<<"FOOD"<<endl;
+        cout << "FOOD" << endl;
     } else if (abs(std_normal()) < 1) {
         // follow other PHEROMONE
         go(curr_pos, near_where);
-        cout<<"PHEROMONE"<<endl;
+        cout << "PHEROMONE" << endl;
     } else {
         go(curr_pos, curr_pos + oriented);
-        cout<<"WONDER"<<endl;
+        cout << "WONDER" << endl;
     }
-    cout<<"============================"<<endl;
-    cout<<"DDD"<<curr_pos.x<<"," <<curr_pos.y<<endl;
-    cout<<"============================"<<endl;
+    cout << "============================" << endl;
+    cout << "DDD" << curr_pos.x << "," << curr_pos.y << endl;
+    cout << "============================" << endl;
 }
 
 };  // namespace detail
@@ -197,6 +195,7 @@ void Worker::find_food()
     me->set_step(me->get_step() - 1);
     auto my_map = me->get_map();
     auto curr_pos = me->at();
+    cerr << curr_pos;
     if (my_map->get_at(curr_pos).type != FOOD)
         detail::walk(me, this->oriented);
     else  // Next time will run `pick_food()`
@@ -228,7 +227,7 @@ void Worker::return_home()
         is_go_to_find_food = true;
     }
     go(me->at(), me->home());
-    cout<<"return home"<<endl;
+    cout << "return home" << endl;
 
     if (me->at() == me->home()) {
         put_food(me->home());
@@ -238,7 +237,10 @@ void Worker::return_home()
 
 Worker::Worker(Ant *_me = nullptr) : me(_me)
 {
-    oriented = pos_t(std_normal() > 0, std_normal() > 0);
+    pos_t __proto_oriented(0, 1);
+    if (std_normal() > 0)
+        swap(__proto_oriented.x, __proto_oriented.y);
+    oriented = __proto_oriented;
 }
 
 void Worker::info()
