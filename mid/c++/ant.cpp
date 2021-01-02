@@ -54,16 +54,21 @@ void walk(Ant *me, pos_t oriented)
 
     // Scan near by
     auto find_near = [&]() {
-        auto a = my_map->get_at(pos_t(curr_pos.x + 1, curr_pos.y));
-        auto b = my_map->get_at(pos_t(curr_pos.x + 1, curr_pos.y + 1));
-        auto c = my_map->get_at(pos_t(curr_pos.x, curr_pos.y + 1));
+        MapObj a, b, c;
+
+        // Might ou-of-range while get a, b, c
+        a = my_map->get_at(pos_t((curr_pos.x + 1) % HEIGHT, curr_pos.y));
+        b = my_map->get_at(
+            pos_t((curr_pos.x + 1) % HEIGHT, (curr_pos.y + 1) % WIDTH));
+        c = my_map->get_at(pos_t(curr_pos.x, (curr_pos.y + 1) % WIDTH));
 
         if (a.type == FOOD)
-            return make_pair(pos_t(curr_pos.x + 1, curr_pos.y), a);
+            return make_pair(pos_t((curr_pos.x + 1) % HEIGHT, curr_pos.y), a);
         else if (b.type == FOOD)
-            return make_pair(pos_t(curr_pos.x + 1, curr_pos.y + 1), b);
+            return make_pair(
+                pos_t((curr_pos.x + 1) % HEIGHT, (curr_pos.y + 1) % WIDTH), b);
         else if (c.type == FOOD)
-            return make_pair(pos_t(curr_pos.x, curr_pos.y + 1), c);
+            return make_pair(pos_t(curr_pos.x, (curr_pos.y + 1) % WIDTH), c);
         else
             return get_max_obj({a, b, c});
     };
@@ -72,14 +77,11 @@ void walk(Ant *me, pos_t oriented)
     auto [near_where, near_what] = find_near();
     if (near_what.type == FOOD) {
         go(curr_pos, near_where);
-        cout << "FOOD" << endl;
     } else if (abs(std_normal()) < 1) {
         // follow other PHEROMONE
         go(curr_pos, near_where);
-        cout << "PHEROMONE" << endl;
     } else {
         go(curr_pos, curr_pos + oriented);
-        cout << "WONDER" << endl;
     }
     cout << "============================" << endl;
     cout << "DDD" << curr_pos.x << "," << curr_pos.y << endl;
@@ -195,7 +197,7 @@ void Worker::find_food()
     me->set_step(me->get_step() - 1);
     auto my_map = me->get_map();
     auto curr_pos = me->at();
-    cerr << curr_pos;
+    cerr << curr_pos << endl;
     if (my_map->get_at(curr_pos).type != FOOD)
         detail::walk(me, this->oriented);
     else  // Next time will run `pick_food()`
@@ -226,8 +228,9 @@ void Worker::return_home()
         my_food.clean();
         is_go_to_find_food = true;
     }
+    put_pheromone(me->at());
     go(me->at(), me->home());
-    cout << "return home" << endl;
+
 
     if (me->at() == me->home()) {
         put_food(me->home());

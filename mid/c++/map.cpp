@@ -180,17 +180,12 @@ LocalMap::~LocalMap()
 
 MapObj LocalMap::get_at(pos_t pos)
 {
-    bool failed = true;
     MapObj obj;
-    do {
-        try {
-            obj = this->arr.at(pos.x).at(pos.y).load();
-            failed = false;
-        } catch (const std::exception &e) {
-            cerr << e.what() << endl;
-            failed = true;
-        }
-    } while (failed);
+    try {
+        obj = this->arr.at(pos.x).at(pos.y).load();
+    } catch (const std::exception &e) {
+        throw e;
+    }
     return obj;
 }
 
