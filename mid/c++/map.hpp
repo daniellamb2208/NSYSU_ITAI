@@ -10,7 +10,7 @@
 #define HEIGHT 10  // test
 #define WIDTH 10
 #define DISAPPEAR_THRESHOLD 0.3
-#define MAX_FOOD (HEIGHT * WIDTH)
+#define MAX_FOOD (HEIGHT * WIDTH * 10)
 
 const double DISCOUNT_LAMBDA = 1.1;
 using namespace std;
@@ -18,7 +18,7 @@ using namespace std;
 enum { EMPTY, FOOD, PHEROMONE, HOME };
 
 struct pos_t {
-    size_t x, y;
+    int x, y;
     // Constructor
     pos_t() : x(0), y(0) {}
     pos_t(size_t _x, size_t _y) : x(_x), y(_y) {}

@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAG = -Og -Os -std=c++2a -Wall -lpthread -latomic -g
+CPPFLAG = -Og -Os -std=c++17 -Wall -lpthread -latomic -g
 LD = /usr/bin/ld
 
 all: clean dep main

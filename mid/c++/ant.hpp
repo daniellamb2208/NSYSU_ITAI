@@ -42,7 +42,6 @@ private:
 protected:
     friend class Job;  // Make Job could access *this directly
 
-
 public:
     unique_ptr<Job> job;
 

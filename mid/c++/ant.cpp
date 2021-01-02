@@ -18,21 +18,24 @@ static const inline double std_normal()
 // Go to destination for single step
 static inline void go(pos_t &curr, const pos_t &dest)
 {
+    cout<<"AAA"<< &curr<<endl;
     auto diff = dest - curr;
     // +1 prevent 0/0
-    curr.x += (diff.x > diff.y) ? ((diff.x | 1) / (diff.x | 1)) : 0;
-    curr.y += (diff.x <= diff.y) ? ((diff.y | 1) / (diff.y | 1)) : 0;
+    cout<<"CCC"<<curr.x<<"," <<curr.y<<endl;
+    curr.x += (abs(diff.x) > abs(diff.y)) ? ((diff.x | 1) / (abs(diff.x | 1))) : 0;
+    curr.y += (abs(diff.x) <= abs(diff.y)) ? ((diff.y | 1) / (abs(diff.y | 1))) : 0;
 
     // Overflow condition, move one step, so if overflow is occurred
     // previous position most be 0
-    if (curr.x & (1 << 32))
+    if (curr.x == -1)
         curr.x = 0;
-    if (curr.y & (1 << 32))
+    if (curr.y == -1)
         curr.y = 0;
     if (curr.x >= HEIGHT)
         curr.x = HEIGHT - 1;
     if (curr.y >= WIDTH)
         curr.y = WIDTH - 1;
+    cout<<"CCC"<<curr.x<<"," <<curr.y<<endl;
 }
 
 namespace detail
@@ -40,6 +43,7 @@ namespace detail
 void walk(Ant *me, pos_t oriented)
 {
     auto &curr_pos = me->at();
+    cout<<"BBB"<<&me->at()<<endl;
     auto my_map = me->get_map();
 
     auto get_max_obj = [](vector<MapObj> &&v) {
@@ -70,12 +74,18 @@ void walk(Ant *me, pos_t oriented)
     auto [near_where, near_what] = find_near();
     if (near_what.type == FOOD) {
         go(curr_pos, near_where);
+        cout<<"FOOD"<<endl;
     } else if (abs(std_normal()) < 1) {
         // follow other PHEROMONE
         go(curr_pos, near_where);
+        cout<<"PHEROMONE"<<endl;
     } else {
         go(curr_pos, curr_pos + oriented);
+        cout<<"WONDER"<<endl;
     }
+    cout<<"============================"<<endl;
+    cout<<"DDD"<<curr_pos.x<<"," <<curr_pos.y<<endl;
+    cout<<"============================"<<endl;
 }
 
 };  // namespace detail
@@ -218,6 +228,7 @@ void Worker::return_home()
         is_go_to_find_food = true;
     }
     go(me->at(), me->home());
+    cout<<"return home"<<endl;
 
     if (me->at() == me->home()) {
         put_food(me->home());
