@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAG = -Og -Os -std=c++2a -Wall -lpthread -latomic -g -fconcepts
+CPPFLAG = -Ofast -Os -std=c++2a -Wall -lpthread -latomic -g -fconcepts
 LD = /usr/bin/ld
 
 all: clean dep main
@@ -16,5 +16,8 @@ test: clean dep
 	$(CC) $(CPPFLAG) -c driver/testMap.cpp
 	$(CC) *.o -lpthread -latomic -lstdc++ -o testMap.elf -fsanitize=address
 
+interface: clean dep
+	$(CC) $(CPPFLAG) -fPIC -shared driver/interfaces.cpp -o interfaces.so
+
 clean:
-	rm -rf *.o *.elf output.txt
+	rm -rf *.o *.elf *.so output.txt
