@@ -20,5 +20,31 @@
 四、 承規則三，請設計界面顯示動物(或生命)的血量值，或可代表該動物(或生命)的生存剩餘時間。
 
 # 實做環境
-
+C++20 and Pygame
 Support POSIX
+
+## 設定環境
+```
+./gui/setup.sh
+```
+# 如何執行
+
+## CLI
+```
+./c++/main.elf
+```
+### CLI 如何編譯
+```
+make
+```
+
+## GUI
+```
+./gui/main.py
+```
+### 如何編譯 so
+```
+cd c++/cmake/
+cmake .
+make clean all
+```
