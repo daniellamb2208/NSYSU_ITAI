@@ -133,6 +133,7 @@ MapObj MapObj::operator+(MapObj other)
 
 void LocalMap::sync()
 {
+    int counter = 0;
     auto proc_unit = [&](MapObj obj, auto &jter) {
         auto preValue = obj.value;
         if (obj.value < 0.03 && obj.type != HOME)
@@ -156,8 +157,8 @@ void LocalMap::sync()
         for (auto iter = arr.begin(); iter != arr.end(); iter++)
             for (auto jter = iter->begin(); jter != iter->end(); jter++)
                 proc_unit(jter->load(), jter);
-
-        food_gen();
+        if (counter++ > 5)
+            food_gen();
         this_thread::sleep_for(chrono::seconds(1));
     }
 }
