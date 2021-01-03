@@ -83,9 +83,6 @@ void walk(Ant *me, pos_t oriented)
     } else {
         go(curr_pos, curr_pos + oriented);
     }
-    cout << "============================" << endl;
-    cout << "DDD" << curr_pos.x << "," << curr_pos.y << endl;
-    cout << "============================" << endl;
 }
 
 };  // namespace detail
@@ -106,58 +103,14 @@ Ant::Ant(LocalMap *_map, pos_t _my_home)
     this->home_pos = _my_home;
 }
 
-pos_t &Ant::at()
+void info(const Ant *a)
 {
-    return this->pos;
-}
-void Ant::set_step(int _step)
-{
-    this->step = _step;
-}
-const int Ant::get_step() const
-{
-    return this->step;
-}
-void Ant::set_job(unique_ptr<Job> &&_job)
-{
-    this->job = move(_job);
-}
-void Ant::set_map(LocalMap *_myMap)
-{
-    this->myMap = _myMap;
-}
-LocalMap *Ant::get_map() const
-{
-    return this->myMap;
-}
-int Ant::get_energy() const
-{
-    return this->energy;
-}
-void Ant::set_energy(int _value)
-{
-    this->energy = _value;
-}
-STATUS Ant::get_live_status() const
-{
-    return this->is_alive;
-}
-void Ant::set_live_status(STATUS status)
-{
-    this->is_alive = status;
-}
-pos_t &Ant::home()
-{
-    return this->home_pos;
-}
-
-void info(Ant *a)
-{
+    // cerr << "In main: " << a << endl;
     cerr << "pos: \t(" << a->at().x << ", " << a->at().y << ")" << endl
-         << "home: \t(" << a->home_pos.x << ", " << a->home_pos.y << ")" << endl
-         << "step: \t" << a->step << endl
-         << "energy: " << a->energy << endl
-         << "alive: \t" << static_cast<bool>(a->is_alive) << endl;
+         << "home: \t" << a->home() << endl
+         << "step: \t" << a->get_step() << endl
+         << "energy: " << a->get_energy() << endl
+         << "alive: \t" << static_cast<bool>(a->get_live_status()) << endl;
     a->job->info();
 }
 
@@ -194,10 +147,11 @@ void Worker::alive_handler()
 
 void Worker::find_food()
 {
+    // cerr << "In Ant: " << this->me << endl;
     me->set_step(me->get_step() - 1);
     auto my_map = me->get_map();
     auto curr_pos = me->at();
-    cerr << curr_pos << endl;
+    // cerr << curr_pos << endl;
     if (my_map->get_at(curr_pos).type != FOOD)
         detail::walk(me, this->oriented);
     else  // Next time will run `pick_food()`

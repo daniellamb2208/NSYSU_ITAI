@@ -60,19 +60,22 @@ public:
     Ant &operator=(Ant &&) = default;
     ~Ant() = default;
 
-    pos_t &at();
-    void set_step(int _step);
-    const int get_step() const;
-    void set_job(unique_ptr<Job> &&_job);
-    void set_map(LocalMap *_myMap);
-    LocalMap *get_map() const;
-    int get_energy() const;
-    void set_energy(int _value);
-    STATUS get_live_status() const;
-    void set_live_status(STATUS status);
-    pos_t &home();
+    pos_t &at() { return this->pos; }
+    const pos_t &at() const { return this->pos; }
+    void set_step(int _step) { this->step = _step; }
+    const int get_step() const { return this->step; }
+    void set_job(unique_ptr<Job> &&_job) { this->job = move(_job); }
+    void set_map(LocalMap *_myMap) { this->myMap = _myMap; }
+    LocalMap *get_map() const { return this->myMap; }
+    int get_energy() const { return this->energy; }
+    void set_energy(int _value) { this->energy = _value; }
+    STATUS get_live_status() const { return this->is_alive; }
+    void set_live_status(STATUS status) { this->is_alive = status; }
+    pos_t &home() { return this->home_pos; }
+    const pos_t &home() const { return this->home_pos; }
+    const Ant *get_me() const { return this; };
 
-    friend void info(Ant *a);
+    friend void info(const Ant *a);
 };
 
 class Job

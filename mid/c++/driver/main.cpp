@@ -31,19 +31,19 @@ int main()
     localMap.food_gen();
     localMap.put_at(pos_t(0, 0), MapObj(0, HOME));
 
-    vector<Ant> ant_pool;
+    vector<unique_ptr<Ant>> ant_pool;
     for (int i = 0; i < 1; i++)
-        ant_pool.push_back(move(Ant(&localMap, pos_t(0, 0))));
+        ant_pool.push_back(make_unique<Ant>(&localMap, pos_t(0, 0)));
 
     while (!ant_pool.empty()) {
         for (auto &i : ant_pool) {
-            i.job->do_job();
-            info(&i);
+            i->job->do_job();
+            info(i->get_me());
         }
 
         // Collect dead ant
         for (auto iter = ant_pool.begin(); iter != ant_pool.end();) {
-            if (iter->get_live_status() == STATUS::DEAD)
+            if (iter->get()->get_live_status() == STATUS::DEAD)
                 iter = ant_pool.erase(iter);
             else
                 iter++;
