@@ -13,8 +13,11 @@ void init();
 // Returns vector of (type, pos_x, pos_y, value)
 vector<tuple<int, int, int, double>> view();
 
+// Let ants go
+void go();
+
 // Add one ant by default
-bool add_ant(size_t num);
+bool add_ant(size_t num, pos_t pos);
 
 // Put 100 food on pos_t
 bool add_food(int x, int y);
