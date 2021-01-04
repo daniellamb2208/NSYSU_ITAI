@@ -3,6 +3,22 @@
 #include <memory>
 #include "Worker.hpp"
 using namespace std;
+#define QUEEN_APPETITE 100
+#define MALE_APPETITE 80
+#define WORKER_APPETITE 1
+#define SOLDIER_APPETITE 40
+
+static inline const int get_rand_uniform(int cube_sum_range = 5) noexcept
+{
+    unsigned long long bound = 0;
+    for (int i = 0; i < cube_sum_range; i++)
+        bound += i * i * i;
+
+    random_device rd;
+    mt19937_64 gen = mt19937_64(rd());
+    uniform_int_distribution<int> dis(0, bound);  // default [0, 100)
+    return bind(dis, gen)();                      // bind and call
+}
 
 // Go to destination for single step
 void go(pos_t &curr, const pos_t &dest)
