@@ -49,7 +49,7 @@ void walk(Ant *me, pos_t oriented)
         for (auto i : v)
             if (i.value > max_item.value)
                 max_item = i;
-        return make_pair(pos_t(), max_item);
+        return max_item;
     };
 
     // Scan near by
@@ -70,11 +70,14 @@ void walk(Ant *me, pos_t oriented)
         else if (c.type == FOOD)
             return make_pair(pos_t(curr_pos.x, (curr_pos.y + 1) % WIDTH), c);
         else
-            return get_max_obj({a, b, c});
+            return make_pair(
+                pos_t((curr_pos.x + 1) % HEIGHT, (curr_pos.y + 1) % WIDTH),
+                get_max_obj({a, b, c}));
     };
 
     //
     auto [near_where, near_what] = find_near();
+    // cerr << "Want to go: " << near_where << endl;
     if (near_what.type == FOOD) {
         go(curr_pos, near_where);
     } else if (abs(std_normal()) < 1) {
@@ -198,11 +201,12 @@ Worker::Worker(Ant *_me = nullptr) : me(_me)
     if (std_normal() > 0)
         swap(__proto_oriented.x, __proto_oriented.y);
     oriented = __proto_oriented;
+    my_food.clean();
 }
 
 void Worker::info()
 {
     cerr << "go \t" << ((is_go_to_find_food) ? "food" : "home") << endl
-         << "my \t" << my_food.type << " " << my_food.value << endl
+         << "my \t" << (int) my_food.type << " " << my_food.value << endl
          << "oriented (" << oriented.x << ", " << oriented.y << ")\n";
 }
