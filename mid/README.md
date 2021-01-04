@@ -40,7 +40,8 @@ make
 
 ## GUI
 ```
-./gui/main.py
+cd gui/
+./main.py
 ```
 ### 如何編譯 so
 ```
