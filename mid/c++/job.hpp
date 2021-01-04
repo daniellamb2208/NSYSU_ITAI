@@ -27,6 +27,7 @@ public:
         alive_handler();
     }
     virtual void info() {}
+    virtual vector<unique_ptr<Ant>> &get_slave() = 0;
 };
 
 #endif

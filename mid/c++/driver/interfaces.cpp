@@ -43,7 +43,7 @@ void ant_game::go()
 {
     for (auto &i : ant_pool) {
         i->job->do_job();
-        info(i->get_me());
+        fo(i->get_me());
     }
     for (auto iter = ant_pool.begin(); iter != ant_pool.end();) {
         if (iter->get()->get_live_status() == STATUS::DEAD)
