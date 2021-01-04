@@ -215,7 +215,7 @@ void LocalMap::food_gen()
 {
     auto value = int(__get_rand() * MAX_FOOD);
 
-    size_t num = __get_rand() * 50;  // 50 food? I guess.
+    size_t num = __get_rand() * 10;  // 50 food? I guess.
     food_gen(num, value);
 }
 
