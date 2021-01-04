@@ -12,7 +12,7 @@
 #define DISAPPEAR_THRESHOLD 0.3
 #define MAX_FOOD (HEIGHT * WIDTH)
 
-const double DISCOUNT_LAMBDA = 1.1;
+const double DISCOUNT_LAMBDA = 1.01;
 using namespace std;
 
 enum { EMPTY = 8, PHEROMONE = 4, FOOD = 2, HOME = 1 };
