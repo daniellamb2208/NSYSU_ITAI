@@ -70,7 +70,7 @@ def main():
                     window, hormones, (arr[i][1], arr[i][2]), size[0]//8)
             elif arr[i][0] == 2:  # food
                 pygame.draw.circle(
-                    window, food, (arr[i][1], arr[i][2]), arr[i][3]*size[0]//8)
+                    window, food, (arr[i][1], arr[i][2]), size[0]//8)
         pygame.display.flip()  # update to screen
         clk.tick(60)  # fps
         # time.sleep(1)  # synchronization

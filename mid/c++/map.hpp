@@ -7,8 +7,8 @@
 #include <map>
 #include <thread>
 #include <vector>
-#define HEIGHT 40  // test
-#define WIDTH 40
+#define HEIGHT 60  // test
+#define WIDTH 80
 #define DISAPPEAR_THRESHOLD 0.3
 #define MAX_FOOD (HEIGHT * WIDTH * 10)
 

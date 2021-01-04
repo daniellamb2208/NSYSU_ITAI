@@ -15,7 +15,7 @@ void ant_game::init()
 {
     localMap.put_at(pos_t(), MapObj(0, HOME));
     for (int i = 0; i < 20; i++)
-        add_ant(1, pos_t(rand() % HEIGHT, rand() % WIDTH));
+        add_ant(1, pos_t());
     // ant_pool.push_back(make_unique<Ant>(&localMap, pos_t(0, 0)));
 }
 
@@ -27,7 +27,7 @@ vector<tuple<int, int, int, double>> ant_game::view()
     for (size_t i = 0; i != map_print.size(); i++)
         for (size_t j = 0; j != map_print.front().size(); j++)
             if (map_print[i][j].second != EMPTY)
-                v.push_back(make_tuple(map_print[i][j].second, i, j,
+                v.push_back(make_tuple(map_print[i][j].second, i * 10, j * 10,
                                        map_print[i][j].first));
 
 
