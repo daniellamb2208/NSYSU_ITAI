@@ -65,7 +65,7 @@ def main():
                 window.blit(Ant.image, Ant.rect.topleft)
                 pygame.draw.rect(
                     window, life_bar, (Ant.rect[0], Ant.rect[1] + size[0], size[0]*Ant.life/full_life, 4))
-            elif arr[i][0] == 1:  # hormones
+            elif arr[i][0] == 4:  # hormones
                 pygame.draw.circle(
                     window, hormones, (arr[i][1], arr[i][2]), size[0]//8)
             elif arr[i][0] == 2:  # food

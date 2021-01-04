@@ -159,7 +159,7 @@ void LocalMap::sync()
                 proc_unit(jter->load(), jter);
         if (counter++ > 5)
             food_gen();
-        this_thread::sleep_for(chrono::seconds(1));
+        this_thread::sleep_for(chrono::milliseconds(10));
     }
 }
 
