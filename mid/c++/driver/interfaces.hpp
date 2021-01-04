@@ -16,6 +16,8 @@ vector<tuple<int, int, int, double>> view();
 // Let ants go
 void go();
 
+void birth();
+
 // Add one ant by default
 bool add_ant(size_t num, pos_t pos);
 

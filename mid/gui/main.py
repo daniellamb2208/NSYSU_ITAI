@@ -55,6 +55,7 @@ def main():
         #     arr.append(obj)
         #     obj = []
         # file.close()
+        wrapper.birth()
         wrapper.go()
         arr = wrapper.view()
         window.fill(ground)
@@ -72,7 +73,7 @@ def main():
                 pygame.draw.circle(
                     window, food, (arr[i][1], arr[i][2]), size[0]//8)
         pygame.display.flip()  # update to screen
-        clk.tick(60)  # fps
+        clk.tick(120)  # fps
         # time.sleep(1)  # synchronization
     pygame.quit()
 

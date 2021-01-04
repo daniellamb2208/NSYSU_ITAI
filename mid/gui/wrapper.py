@@ -21,6 +21,10 @@ def view():
     return cppyy.gbl.ant_game.view()
 
 
+def birth():
+    cppyy.gbl.ant_game.birth()
+
+
 def go():
     cppyy.gbl.ant_game.go()
 

@@ -14,7 +14,7 @@ LocalMap localMap(false);
 void ant_game::init()
 {
     localMap.put_at(pos_t(), MapObj(0, HOME));
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < 5; i++)
         add_ant(1, pos_t());
     // ant_pool.push_back(make_unique<Ant>(&localMap, pos_t(0, 0)));
 }
@@ -53,7 +53,14 @@ void ant_game::go()
     }
 }
 
-bool ant_game::add_ant(size_t num = 1, pos_t pos = pos_t(0, 0))
+void ant_game::birth()
+{
+    auto num = localMap.get_at(pos_t()).value / 200;
+    localMap.merge(pos_t(), MapObj((-1) * 50 * num, HOME));
+    add_ant(num, pos_t());
+}
+
+bool ant_game::add_ant(size_t num, pos_t pos = pos_t(0, 0))
 {
     try {
         for (size_t i = 0; i < num; i++)
