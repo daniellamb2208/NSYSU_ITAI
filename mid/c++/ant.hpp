@@ -8,8 +8,8 @@ using namespace std;
 // Changing to observe the ant behaviour
 #define STEP 1
 #define CHILDREN_BASE 30
-#define MAXSTEP 1500
-#define MAXENERGY 1500
+#define MAXSTEP 500
+#define MAXENERGY 550
 #define SLEEP_DURATION 0  // micro_seconds
 #define PHEROMONE_FREQUENCY 1
 

@@ -10,7 +10,7 @@
 #define HEIGHT 60  // test
 #define WIDTH 80
 #define DISAPPEAR_THRESHOLD 0.3
-#define MAX_FOOD (HEIGHT * WIDTH * 2)
+#define MAX_FOOD (HEIGHT * WIDTH)
 
 const double DISCOUNT_LAMBDA = 1.1;
 using namespace std;
