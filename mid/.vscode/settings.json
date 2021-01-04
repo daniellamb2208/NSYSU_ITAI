@@ -31,5 +31,6 @@
         "myant",
         "phermone",
         "pygame"
-    ]
+    ],
+    "cmake.configureOnOpen": false
 }

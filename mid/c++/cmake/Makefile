@@ -142,6 +142,33 @@ ant/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/build
 .PHONY : ant/fast
 
+media/d/git/nsysu/ai/mid/c++/Worker.o: media/d/git/nsysu/ai/mid/c++/Worker.cpp.o
+
+.PHONY : media/d/git/nsysu/ai/mid/c++/Worker.o
+
+# target to build an object file
+media/d/git/nsysu/ai/mid/c++/Worker.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/media/d/git/nsysu/ai/mid/c++/Worker.cpp.o
+.PHONY : media/d/git/nsysu/ai/mid/c++/Worker.cpp.o
+
+media/d/git/nsysu/ai/mid/c++/Worker.i: media/d/git/nsysu/ai/mid/c++/Worker.cpp.i
+
+.PHONY : media/d/git/nsysu/ai/mid/c++/Worker.i
+
+# target to preprocess a source file
+media/d/git/nsysu/ai/mid/c++/Worker.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/media/d/git/nsysu/ai/mid/c++/Worker.cpp.i
+.PHONY : media/d/git/nsysu/ai/mid/c++/Worker.cpp.i
+
+media/d/git/nsysu/ai/mid/c++/Worker.s: media/d/git/nsysu/ai/mid/c++/Worker.cpp.s
+
+.PHONY : media/d/git/nsysu/ai/mid/c++/Worker.s
+
+# target to generate assembly for a file
+media/d/git/nsysu/ai/mid/c++/Worker.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/media/d/git/nsysu/ai/mid/c++/Worker.cpp.s
+.PHONY : media/d/git/nsysu/ai/mid/c++/Worker.cpp.s
+
 media/d/git/nsysu/ai/mid/c++/ant.o: media/d/git/nsysu/ai/mid/c++/ant.cpp.o
 
 .PHONY : media/d/git/nsysu/ai/mid/c++/ant.o
@@ -196,6 +223,33 @@ media/d/git/nsysu/ai/mid/c++/driver/interfaces.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/media/d/git/nsysu/ai/mid/c++/driver/interfaces.cpp.s
 .PHONY : media/d/git/nsysu/ai/mid/c++/driver/interfaces.cpp.s
 
+media/d/git/nsysu/ai/mid/c++/job.o: media/d/git/nsysu/ai/mid/c++/job.cpp.o
+
+.PHONY : media/d/git/nsysu/ai/mid/c++/job.o
+
+# target to build an object file
+media/d/git/nsysu/ai/mid/c++/job.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/media/d/git/nsysu/ai/mid/c++/job.cpp.o
+.PHONY : media/d/git/nsysu/ai/mid/c++/job.cpp.o
+
+media/d/git/nsysu/ai/mid/c++/job.i: media/d/git/nsysu/ai/mid/c++/job.cpp.i
+
+.PHONY : media/d/git/nsysu/ai/mid/c++/job.i
+
+# target to preprocess a source file
+media/d/git/nsysu/ai/mid/c++/job.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/media/d/git/nsysu/ai/mid/c++/job.cpp.i
+.PHONY : media/d/git/nsysu/ai/mid/c++/job.cpp.i
+
+media/d/git/nsysu/ai/mid/c++/job.s: media/d/git/nsysu/ai/mid/c++/job.cpp.s
+
+.PHONY : media/d/git/nsysu/ai/mid/c++/job.s
+
+# target to generate assembly for a file
+media/d/git/nsysu/ai/mid/c++/job.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/ant.dir/build.make CMakeFiles/ant.dir/media/d/git/nsysu/ai/mid/c++/job.cpp.s
+.PHONY : media/d/git/nsysu/ai/mid/c++/job.cpp.s
+
 media/d/git/nsysu/ai/mid/c++/map.o: media/d/git/nsysu/ai/mid/c++/map.cpp.o
 
 .PHONY : media/d/git/nsysu/ai/mid/c++/map.o
@@ -232,12 +286,18 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... ant"
+	@echo "... media/d/git/nsysu/ai/mid/c++/Worker.o"
+	@echo "... media/d/git/nsysu/ai/mid/c++/Worker.i"
+	@echo "... media/d/git/nsysu/ai/mid/c++/Worker.s"
 	@echo "... media/d/git/nsysu/ai/mid/c++/ant.o"
 	@echo "... media/d/git/nsysu/ai/mid/c++/ant.i"
 	@echo "... media/d/git/nsysu/ai/mid/c++/ant.s"
 	@echo "... media/d/git/nsysu/ai/mid/c++/driver/interfaces.o"
 	@echo "... media/d/git/nsysu/ai/mid/c++/driver/interfaces.i"
 	@echo "... media/d/git/nsysu/ai/mid/c++/driver/interfaces.s"
+	@echo "... media/d/git/nsysu/ai/mid/c++/job.o"
+	@echo "... media/d/git/nsysu/ai/mid/c++/job.i"
+	@echo "... media/d/git/nsysu/ai/mid/c++/job.s"
 	@echo "... media/d/git/nsysu/ai/mid/c++/map.o"
 	@echo "... media/d/git/nsysu/ai/mid/c++/map.i"
 	@echo "... media/d/git/nsysu/ai/mid/c++/map.s"
