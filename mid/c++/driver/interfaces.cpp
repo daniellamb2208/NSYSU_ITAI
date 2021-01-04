@@ -27,13 +27,13 @@ vector<tuple<int, int, int, double>> ant_game::view()
     for (size_t i = 0; i != map_print.size(); i++)
         for (size_t j = 0; j != map_print.front().size(); j++)
             if (map_print[i][j].second != EMPTY)
-                v.push_back(make_tuple(map_print[i][j].second, i * 10, j * 10,
+                v.push_back(make_tuple(map_print[i][j].second, j * 10, i * 10,
                                        map_print[i][j].first));
 
 
     // Type of Ant is 0
     for (auto &i : ant_pool)
-        v.push_back(make_tuple(0, i->at().x * 10, i->at().y * 10,
+        v.push_back(make_tuple(0, i->at().y * 10, i->at().x * 10,
                                ((i->get_step() + i->get_energy()) * 100.0 /
                                 (MAXSTEP + MAXENERGY))));
     return v;

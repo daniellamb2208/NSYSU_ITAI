@@ -12,7 +12,7 @@ static const inline double std_normal()
     random_device rd;
     mt19937_64 gen = mt19937_64(rd());
     normal_distribution<double> dis(0, 1);  // default [0, 100)
-    return bind(dis, gen)();                // bind and call
+    return dis(gen);                        // bind and call
 }
 
 // Go to destination for single step
@@ -198,7 +198,7 @@ void Worker::return_home()
 Worker::Worker(Ant *_me = nullptr) : me(_me)
 {
     pos_t __proto_oriented(0, 1);
-    if (std_normal() > 0)
+    if (std_normal() > -1)
         swap(__proto_oriented.x, __proto_oriented.y);
     oriented = __proto_oriented;
     my_food.clean();

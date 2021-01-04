@@ -10,7 +10,7 @@ namespace ant_game
 // Init this C++ backend, must be called first
 void init();
 
-// Returns vector of (type, pos_x, pos_y, value)
+// Returns vector of (type, pos_y, pos_x, value)
 vector<tuple<int, int, int, double>> view();
 
 // Let ants go
